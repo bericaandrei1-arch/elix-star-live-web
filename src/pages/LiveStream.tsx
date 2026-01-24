@@ -78,7 +78,7 @@ export default function LiveStream() {
     <div className="relative h-screen w-full bg-black overflow-hidden">
       {/* Live Video Placeholder */}
       <video
-        src="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+        src="https://media.w3.org/2010/05/sintel/trailer_hd.mp4"
         className="w-full h-full object-cover"
         autoPlay
         loop

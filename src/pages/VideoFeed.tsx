@@ -4,7 +4,7 @@ import VideoPlayer from '../components/VideoPlayer';
 const MOCK_VIDEOS = [
   {
     id: '1',
-    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    url: 'https://media.w3.org/2010/05/sintel/trailer_hd.mp4',
     username: 'elix_star',
     caption: 'Chasing the sunset vibes 🌅 #elix #live',
     likes: 1200,
@@ -15,7 +15,7 @@ const MOCK_VIDEOS = [
   },
   {
     id: '2',
-    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    url: 'https://media.w3.org/2010/05/bunny/trailer.mp4',
     username: 'funny_bunny',
     caption: 'Wait for the end... 😂 #funny #bunny',
     likes: 5430,
@@ -26,7 +26,7 @@ const MOCK_VIDEOS = [
   },
   {
     id: '3',
-    url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    url: 'https://media.w3.org/2010/05/video/movie_300.mp4',
     username: 'dreamer_01',
     caption: 'Building dreams one pixel at a time 🎮 #gamedev',
     likes: 890,
