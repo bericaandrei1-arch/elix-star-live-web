@@ -36,7 +36,7 @@ export default function Upload() {
   const TABS = ['POST', 'CREATE', 'LIVE'];
 
   return (
-    <div className="relative h-screen w-full bg-black text-white overflow-hidden flex flex-col">
+    <div className="fixed inset-0 h-[100dvh] w-full bg-black text-white overflow-hidden flex flex-col">
       {/* Camera Preview */}
       <video 
         ref={videoRef}
@@ -47,17 +47,17 @@ export default function Upload() {
       />
 
       {/* Top Bar */}
-      <div className="relative z-10 flex justify-between items-start p-4 pt-12">
+      <div className="relative z-10 flex justify-between items-start p-4 pt-8">
         <button onClick={() => navigate('/')} className="p-2">
-          <X size={28} />
+          <X size={28} className="drop-shadow-lg" />
         </button>
 
-        <button className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full">
+        <button className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg">
           <Music size={14} />
           <span className="text-sm font-semibold">Add sound</span>
         </button>
 
-        <div className="flex flex-col gap-6 items-center pt-2">
+        <div className="flex flex-col gap-5 items-center pt-2">
            <ToolIcon icon={<RotateCcw size={24} />} label="Flip" />
            <ToolIcon icon={<Zap size={24} />} label="Speed" />
            <ToolIcon icon={<Wand2 size={24} />} label="Beauty" />
@@ -66,21 +66,21 @@ export default function Upload() {
         </div>
       </div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Spacer - Flexible to push bottom content down */}
+      <div className="flex-1 min-h-0" />
 
-      {/* Bottom Controls */}
-      <div className="relative z-10 flex flex-col items-center w-full pb-8 bg-gradient-to-t from-black/80 to-transparent pt-20">
+      {/* Bottom Controls Container */}
+      <div className="relative z-10 flex flex-col items-center w-full pb-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-10">
         
         {/* Mode Selector */}
-        <div className="flex items-center gap-6 mb-6 overflow-x-auto no-scrollbar px-10 font-semibold text-sm text-white/60">
+        <div className="flex items-center gap-6 mb-4 overflow-x-auto no-scrollbar px-10 font-semibold text-sm text-white/70 w-full justify-center">
            {MODES.map((mode) => (
              <button 
                 key={mode}
                 onClick={() => setActiveMode(mode)}
                 className={cn(
-                  "whitespace-nowrap transition-colors",
-                  activeMode === mode ? "text-white bg-white/20 px-2 py-0.5 rounded-full" : ""
+                  "whitespace-nowrap transition-all px-2 py-1 rounded-full",
+                  activeMode === mode ? "text-black bg-white font-bold" : "hover:text-white"
                 )}
              >
                {mode}
@@ -88,47 +88,46 @@ export default function Upload() {
            ))}
         </div>
 
-        {/* Record Button Area (With Effects Carousel) */}
-        <div className="flex items-center justify-center w-full px-4 mb-8 relative">
+        {/* Record Button Area */}
+        <div className="flex items-center justify-center w-full px-4 mb-6 relative">
            
            {/* Upload (Left Corner) */}
-           <div className="absolute left-8 flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-md bg-gray-800 flex items-center justify-center border border-white/20 overflow-hidden">
-                 {/* Simulate gallery thumbnail */}
-                 <ImageIcon size={20} className="text-white/80" />
+           <div className="absolute left-8 flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity group">
+              <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center border-2 border-white/20 overflow-hidden group-hover:border-white/50">
+                 <ImageIcon size={20} className="text-white/90" />
               </div>
-              <span className="text-[10px] font-medium text-shadow">Upload</span>
+              <span className="text-[10px] font-medium text-shadow drop-shadow-md">Upload</span>
            </div>
 
-           {/* Effects Carousel (Simulated) */}
-           <div className="flex items-center gap-4">
-               {/* Left Effect (Inactive) */}
-               <div className="w-10 h-10 rounded-full bg-pink-600/50 border-2 border-transparent scale-90 opacity-60 flex items-center justify-center">
-                    <Flag size={20} className="text-white" />
+           {/* Effects Carousel */}
+           <div className="flex items-center gap-6">
+               {/* Left Effect */}
+               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 border-2 border-transparent scale-90 opacity-80 flex items-center justify-center shadow-lg">
+                    <Flag size={18} className="text-white" />
                </div>
 
                {/* Center Record Button */}
-               <button className="w-20 h-20 rounded-full border-[5px] border-white flex items-center justify-center transition-transform active:scale-95 shadow-lg">
-                 <div className="w-[72px] h-[72px] bg-[#fe2c55] rounded-full" />
+               <button className="w-[72px] h-[72px] rounded-full border-[4px] border-white/80 flex items-center justify-center transition-transform active:scale-90 shadow-xl bg-transparent">
+                 <div className="w-[60px] h-[60px] bg-[#fe2c55] rounded-full shadow-inner" />
                </button>
 
-               {/* Right Effect (Inactive) */}
-               <div className="w-10 h-10 rounded-full bg-blue-600/50 border-2 border-transparent scale-90 opacity-60 flex items-center justify-center">
-                   <Smile size={20} className="text-white" />
+               {/* Right Effect */}
+               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 border-2 border-transparent scale-90 opacity-80 flex items-center justify-center shadow-lg">
+                   <Smile size={18} className="text-white" />
                </div>
            </div>
 
         </div>
 
         {/* Bottom Tabs */}
-        <div className="flex items-center gap-6 text-sm font-bold text-white/50">
+        <div className="flex items-center gap-8 text-sm font-bold text-white/50 pb-2">
            {TABS.map(tab => (
              <button 
                key={tab}
                onClick={() => setActiveTab(tab)}
                className={cn(
-                 "transition-colors",
-                 activeTab === tab ? "text-white" : ""
+                 "transition-colors hover:text-white/80",
+                 activeTab === tab ? "text-white scale-110" : ""
                )}
              >
                {tab}
@@ -143,9 +142,9 @@ export default function Upload() {
 
 function ToolIcon({ icon, label }: { icon: React.ReactNode, label: string }) {
   return (
-    <button className="flex flex-col items-center gap-1">
-      {icon}
-      {label && <span className="text-[10px] drop-shadow-md">{label}</span>}
+    <button className="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity">
+      <div className="drop-shadow-md filter">{icon}</div>
+      {label && <span className="text-[10px] font-medium drop-shadow-md text-shadow">{label}</span>}
     </button>
   )
 }

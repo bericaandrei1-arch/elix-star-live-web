@@ -8,8 +8,8 @@ export function BottomNav() {
   const location = useLocation();
   const { user } = useAuthStore();
   
-  // Don't show on login/register pages
-  if (['/login', '/register'].includes(location.pathname)) return null;
+  // Don't show on login/register/upload pages
+  if (['/login', '/register', '/upload'].includes(location.pathname)) return null;
 
   return (
     <nav className="fixed bottom-6 left-0 right-0 z-50 px-4">
