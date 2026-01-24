@@ -1,8 +1,10 @@
-import { cn } from '@/lib/utils'
+import React from 'react';
 
-// Empty component
-export default function Empty() {
+export default function Empty({ title }: { title: string }) {
   return (
-    <div className={cn('flex h-full items-center justify-center')}>Empty</div>
-  )
+    <div className="flex flex-col items-center justify-center h-[80vh] text-gray-500">
+      <h1 className="text-2xl font-bold text-white mb-2">{title}</h1>
+      <p>Coming soon...</p>
+    </div>
+  );
 }
