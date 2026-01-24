@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Music, RotateCcw, Zap, Timer, Wand2, ChevronDown, Image as ImageIcon } from 'lucide-react';
+import { X, Music, RotateCcw, Zap, Timer, Wand2, ChevronDown, Image as ImageIcon, Flag, Smile } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Upload() {
@@ -88,28 +88,36 @@ export default function Upload() {
            ))}
         </div>
 
-        {/* Record Button Area */}
-        <div className="flex items-center justify-between w-full px-10 mb-8">
-           {/* Effects (Left) */}
-           <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-lg border-2 border-white/30 overflow-hidden bg-gray-800">
-                {/* Placeholder for effect icon */}
+        {/* Record Button Area (With Effects Carousel) */}
+        <div className="flex items-center justify-center w-full px-4 mb-8 relative">
+           
+           {/* Upload (Left Corner) */}
+           <div className="absolute left-8 flex flex-col items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 rounded-md bg-gray-800 flex items-center justify-center border border-white/20 overflow-hidden">
+                 {/* Simulate gallery thumbnail */}
+                 <ImageIcon size={20} className="text-white/80" />
               </div>
-              <span className="text-[10px]">Effects</span>
+              <span className="text-[10px] font-medium text-shadow">Upload</span>
            </div>
 
-           {/* Shutter Button */}
-           <button className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-transform active:scale-95">
-             <div className="w-[70px] h-[70px] bg-[#fe2c55] rounded-full" />
-           </button>
+           {/* Effects Carousel (Simulated) */}
+           <div className="flex items-center gap-4">
+               {/* Left Effect (Inactive) */}
+               <div className="w-10 h-10 rounded-full bg-pink-600/50 border-2 border-transparent scale-90 opacity-60 flex items-center justify-center">
+                    <Flag size={20} className="text-white" />
+               </div>
 
-           {/* Upload (Right) */}
-           <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center border border-white/20">
-                 <ImageIcon size={24} />
-              </div>
-              <span className="text-[10px]">Upload</span>
+               {/* Center Record Button */}
+               <button className="w-20 h-20 rounded-full border-[5px] border-white flex items-center justify-center transition-transform active:scale-95 shadow-lg">
+                 <div className="w-[72px] h-[72px] bg-[#fe2c55] rounded-full" />
+               </button>
+
+               {/* Right Effect (Inactive) */}
+               <div className="w-10 h-10 rounded-full bg-blue-600/50 border-2 border-transparent scale-90 opacity-60 flex items-center justify-center">
+                   <Smile size={20} className="text-white" />
+               </div>
            </div>
+
         </div>
 
         {/* Bottom Tabs */}
