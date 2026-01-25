@@ -58,15 +58,15 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
       {/* Right Sidebar - Actions */}
       <div className="absolute right-2 bottom-48 flex flex-col items-center gap-4 z-10 pb-8">
         
-        {/* Plus Button (Follow) */}
+        {/* Plus Button (Follow) - Luxury Gold */}
         <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 p-1">
            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <circle cx="12" cy="12" r="10" fill="white" />
-             <path d="M12 7V17M7 12H17" stroke="#ea4359" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+             <circle cx="12" cy="12" r="10" fill="#D4AF37" />
+             <path d="M12 7V17M7 12H17" stroke="#0B0B0B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
            </svg>
         </button>
 
-        {/* Like / Heart in Hand Button */}
+        {/* Like / Heart in Hand Button - Luxury Gold */}
         <div className="flex flex-col items-center gap-1">
           <button 
             className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1"
@@ -75,43 +75,43 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
             <img 
               src="/Icons/Like icon.png" 
               alt="Like"
-              className={`w-full h-full object-contain drop-shadow-md filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 ${isLiked ? 'hue-rotate-[320deg]' : ''}`}
+              className={`w-full h-full object-contain drop-shadow-md ${isLiked ? 'filter sepia saturate-[5000%] hue-rotate-[320deg]' : 'filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]'}`}
             />
           </button>
-          <span className="text-xs font-bold text-white drop-shadow-md">{data.likes}</span>
+          <span className="text-xs font-bold text-[#F5F5F5] drop-shadow-md">{data.likes}</span>
         </div>
 
-        {/* Comments Button */}
+        {/* Comments Button - Luxury Gold */}
         <div className="flex flex-col items-center gap-1">
           <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
              <img 
                src="/Icons/Coment icon.png" 
                alt="Comments"
-               className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
+               className="w-full h-full object-contain drop-shadow-md filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]"
              />
           </button>
-          <span className="text-xs font-bold text-white drop-shadow-md">{data.comments}</span>
+          <span className="text-xs font-bold text-[#F5F5F5] drop-shadow-md">{data.comments}</span>
         </div>
 
-        {/* Bookmark Button (Save) */}
+        {/* Bookmark Button (Save) - Luxury Gold */}
         <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
            <img 
              src="/Icons/Save icon.png" 
              alt="Save"
-             className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
+             className="w-full h-full object-contain drop-shadow-md filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]"
            />
         </button>
 
-        {/* Share Button */}
+        {/* Share Button - Luxury Gold */}
         <div className="flex flex-col items-center gap-1">
           <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
              <img 
                src="/Icons/Share icon.png" 
                alt="Share"
-               className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
+               className="w-full h-full object-contain drop-shadow-md filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]"
              />
           </button>
-          <span className="text-xs font-bold text-white drop-shadow-md">{data.shares}</span>
+          <span className="text-xs font-bold text-[#F5F5F5] drop-shadow-md">{data.shares}</span>
         </div>
 
         {/* Music Button (Spinning Artist Avatar) */}
