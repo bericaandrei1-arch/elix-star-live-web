@@ -56,25 +56,26 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 pointer-events-none" />
 
       {/* Right Sidebar - Actions */}
-      <div className="absolute right-2 bottom-24 flex flex-col items-center gap-4 z-10 pb-8">
+      <div className="absolute right-2 bottom-48 flex flex-col items-center gap-4 z-10 pb-8">
         
         {/* Plus Button (Follow) */}
-        <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition hover:scale-110 border border-gray-200 p-1">
-           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <path d="M12 5V19M5 12H19" stroke="black" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+        <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 p-1">
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+             <circle cx="12" cy="12" r="10" fill="white" />
+             <path d="M12 7V17M7 12H17" stroke="#ea4359" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
            </svg>
         </button>
 
         {/* Like / Heart in Hand Button */}
         <div className="flex flex-col items-center gap-1">
           <button 
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition hover:scale-110 border border-gray-200 overflow-hidden p-1"
+            className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1"
             onClick={() => setIsLiked(!isLiked)}
           >
             <img 
               src="/Icons/Like icon.png" 
               alt="Like"
-              className="w-full h-full object-contain"
+              className={`w-full h-full object-contain drop-shadow-md filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 ${isLiked ? 'hue-rotate-[320deg]' : ''}`}
             />
           </button>
           <span className="text-xs font-bold text-white drop-shadow-md">{data.likes}</span>
@@ -82,32 +83,32 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
 
         {/* Comments Button */}
         <div className="flex flex-col items-center gap-1">
-          <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition hover:scale-110 border border-gray-200 overflow-hidden p-1">
+          <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
              <img 
                src="/Icons/Coment icon.png" 
                alt="Comments"
-               className="w-full h-full object-contain"
+               className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
              />
           </button>
           <span className="text-xs font-bold text-white drop-shadow-md">{data.comments}</span>
         </div>
 
         {/* Bookmark Button (Save) */}
-        <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition hover:scale-110 border border-gray-200 overflow-hidden p-1">
+        <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
            <img 
              src="/Icons/Save icon.png" 
              alt="Save"
-             className="w-full h-full object-contain"
+             className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
            />
         </button>
 
         {/* Share Button */}
         <div className="flex flex-col items-center gap-1">
-          <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center transition hover:scale-110 border border-gray-200 overflow-hidden p-1">
+          <button className="w-10 h-10 flex items-center justify-center transition hover:scale-110 overflow-hidden p-1">
              <img 
                src="/Icons/Share icon.png" 
                alt="Share"
-               className="w-full h-full object-contain"
+               className="w-full h-full object-contain filter invert sepia saturate-[5000%] hue-rotate-[130deg] brightness-100 contrast-100 drop-shadow-md"
              />
           </button>
           <span className="text-xs font-bold text-white drop-shadow-md">{data.shares}</span>
