@@ -10,9 +10,9 @@ export function BottomNav() {
   if (['/login', '/register', '/upload'].includes(location.pathname)) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black">
-      <div className="w-full relative h-[170px]">
-         {/* Full Width Bottom Navigation Image - 170px height */}
+    <nav className="fixed bottom-0 left-0 right-0 z-[100]">
+      <div className="w-full relative h-[160px]">
+         {/* Full Width Bottom Navigation Image - 160px height */}
          <img 
            src="/Icons/Home page Icons.png" 
            alt="Navigation Bar" 
