@@ -12,11 +12,11 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[100]">
       <div className="w-full relative h-[160px]">
-         {/* Full Width Bottom Navigation Image - 160px height */}
+         {/* Full Width Bottom Navigation Image - 160px height - GOLD THEME */}
          <img 
            src="/Icons/Home page Icons.png" 
            alt="Navigation Bar" 
-           className="w-full h-full object-fill" 
+           className="w-full h-full object-fill filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]" 
          />
 
          {/* Invisible Clickable Areas Overlay */}
