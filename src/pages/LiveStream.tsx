@@ -28,6 +28,55 @@ export default function LiveStream() {
   const [coinBalance, setCoinBalance] = useState(999999999); // Max coins for testing
   const [inputValue, setInputValue] = useState('');
   const [isBroadcast, setIsBroadcast] = useState(false);
+  
+  // Battle Mode State
+  const [isBattleMode, setIsBattleMode] = useState(false);
+  const [battleTime, setBattleTime] = useState(300); // 5 minutes
+  const [myScore, setMyScore] = useState(0);
+  const [opponentScore, setOpponentScore] = useState(0);
+  const [battleWinner, setBattleWinner] = useState<'me' | 'opponent' | null>(null);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isBattleMode && battleTime > 0) {
+      interval = setInterval(() => {
+        setBattleTime(prev => {
+            if (prev <= 1) {
+                // End Battle
+                const winner = myScore > opponentScore ? 'me' : 'opponent';
+                setBattleWinner(winner);
+                return 0;
+            }
+            // Simulate opponent score randomly
+            if (Math.random() > 0.7) {
+                setOpponentScore(s => s + Math.floor(Math.random() * 50));
+            }
+            return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isBattleMode, battleTime, myScore, opponentScore]);
+
+  const startBattle = () => {
+      setIsBattleMode(true);
+      setBattleTime(180); // 3 mins
+      setMyScore(0);
+      setOpponentScore(0);
+      setBattleWinner(null);
+  };
+
+  const stopBattle = () => {
+      setIsBattleMode(false);
+      setBattleTime(300);
+      setBattleWinner(null);
+  };
+
+  const formatTime = (seconds: number) => {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     if (streamId === 'broadcast') {
@@ -90,6 +139,11 @@ export default function LiveStream() {
     
     // Deduct coins
     setCoinBalance(prev => prev - gift.coins);
+
+    // Add to Battle Score
+    if (isBattleMode && battleTime > 0) {
+        setMyScore(prev => prev + gift.coins);
+    }
 
     // XP & Level Logic
     const xpGained = gift.coins;
@@ -233,32 +287,93 @@ export default function LiveStream() {
     <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="relative w-full h-[100dvh] md:w-[450px] md:h-[90vh] md:max-h-[850px] md:rounded-3xl bg-black overflow-hidden shadow-2xl border border-white/10">
       {/* Live Video Placeholder or Camera Feed */}
-      {isBroadcast ? (
-          <video
-            ref={videoRef}
-            className="w-full h-full object-cover transform scale-x-[-1]"
-            autoPlay
-            playsInline
-            muted
-          />
-      ) : (
-          <video
-            // Fallback to a reliable public video or a local placeholder if external fails
-            // Using a standard Big Buck Bunny trailer which is very reliable for testing
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-            className="w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-            onError={(e) => {
-                console.warn("Video failed to load, falling back to gradient");
-                // Do not hide the video element, just change background if needed, but keep element for layout
-                e.currentTarget.style.display = 'block'; 
-                e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-purple-900', 'to-black');
-            }}
-          />
-      )}
+      <div className={`relative w-full h-full ${isBattleMode ? 'flex mt-[120px] h-[40%]' : ''}`}>
+        
+        {/* Battle Score Bar */}
+        {isBattleMode && (
+            <div className="absolute -top-[100px] left-0 right-0 z-50 flex flex-col items-center px-2">
+                {/* Timer */}
+                <div className="bg-black/50 text-white font-bold px-3 py-1 rounded-full mb-2 border border-white/20 text-sm">
+                    {formatTime(battleTime)}
+                </div>
+                
+                {/* PK Bar */}
+                <div className="w-full h-8 bg-gray-800 rounded-full overflow-hidden flex relative border-2 border-white/20 shadow-lg">
+                    {/* Left (Me) - Red */}
+                    <div 
+                        className="h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-300 flex items-center justify-start pl-2"
+                        style={{ width: `${(myScore / (myScore + opponentScore || 1)) * 100}%` }}
+                    >
+                        <span className="text-white font-black text-xs drop-shadow-md">{myScore}</span>
+                    </div>
+                    
+                    {/* VS Logo Center */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full flex items-center justify-center border-2 border-white shadow-xl scale-110">
+                        <span className="text-white font-black italic text-xs">VS</span>
+                    </div>
+
+                    {/* Right (Opponent) - Blue */}
+                    <div className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-end pr-2">
+                        <span className="text-white font-black text-xs drop-shadow-md">{opponentScore}</span>
+                    </div>
+                </div>
+                
+                {/* Result */}
+                {battleWinner && (
+                    <div className="absolute top-20 z-50 animate-bounce">
+                        <img 
+                            src={battleWinner === 'me' ? "https://cdn-icons-png.flaticon.com/512/744/744922.png" : "https://cdn-icons-png.flaticon.com/512/10701/10701484.png"} 
+                            alt="Result" 
+                            className="w-32 h-32 drop-shadow-2xl"
+                        />
+                    </div>
+                )}
+            </div>
+        )}
+
+        {/* MY STREAM (Left Side in Battle) */}
+        <div className={`${isBattleMode ? 'w-1/2 border-r-2 border-black/50 overflow-hidden relative' : 'w-full h-full'}`}>
+          {isBroadcast ? (
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover transform scale-x-[-1]"
+                autoPlay
+                playsInline
+                muted
+              />
+          ) : (
+              <video
+                src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                className="w-full h-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+                onError={(e) => {
+                    console.warn("Video failed to load, falling back to gradient");
+                    e.currentTarget.style.display = 'block'; 
+                    e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-purple-900', 'to-black');
+                }}
+              />
+          )}
+          {isBattleMode && <div className="absolute bottom-2 left-2 text-white font-bold text-xs bg-red-500 px-2 rounded-full">ME</div>}
+        </div>
+
+        {/* OPPONENT STREAM (Right Side in Battle) */}
+        {isBattleMode && (
+            <div className="w-1/2 h-full bg-gray-900 relative overflow-hidden">
+                <video 
+                    src="https://cdn.pixabay.com/video/2023/10/19/185714-876123049_large.mp4"
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                />
+                <div className="absolute bottom-2 right-2 text-white font-bold text-xs bg-blue-500 px-2 rounded-full">Rival</div>
+            </div>
+        )}
+      </div>
       
       {/* Dark Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
@@ -271,18 +386,6 @@ export default function LiveStream() {
             </div>
             <div className="flex flex-col justify-center">
                 <div className="flex items-center gap-2">
-                    {/* Level Badge - Original Image Restored & Scaled */}
-                    <div className="relative w-14 h-7 flex items-center justify-center shrink-0">
-                         <img 
-                             src={getLevelBadge(userLevel)}
-                             alt="Lv" 
-                             className="absolute inset-0 w-full h-full object-contain drop-shadow-md scale-125" 
-                         />
-                         {/* Text centered perfectly over the image */}
-                         <span className="relative z-10 text-[9px] font-black text-white italic drop-shadow-md pl-4 pt-0.5">
-                             {userLevel}
-                         </span>
-                     </div>
                     <span className="text-xs font-bold text-white">Andrei Ionut Berica</span>
                 </div>
                 <span className="text-[10px] text-gray-300">12.5k Viewers</span>
@@ -292,6 +395,12 @@ export default function LiveStream() {
                     <UserPlus size={12} /> Follow
                 </button>
             )}
+            <button 
+                onClick={isBattleMode ? stopBattle : startBattle} 
+                className={`ml-2 ${isBattleMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gradient-to-r from-red-600 to-blue-600 animate-pulse'} text-white text-[10px] font-black px-2 py-1 rounded-md border border-white/20 shadow-lg transition-all`}
+            >
+                {isBattleMode ? 'Stop Game' : 'Start Game'}
+            </button>
         </div>
         
         <button onClick={isBroadcast ? stopBroadcast : () => navigate('/')} className="p-2 bg-black/20 rounded-full text-white">

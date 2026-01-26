@@ -20,7 +20,7 @@ export const BottomNav = () => {
        <div className="w-full h-full relative pointer-events-none">
           {/* Imaginea Responsive */}
           <img 
-            src="/Icons/ChatGPT Image Jan 24, 2026, 06_53_05 PM.png" 
+            src="/Icons/Home bar icon.png?v=2" 
             alt="Navigation Bar" 
             className="w-full h-full object-contain object-bottom" 
           />

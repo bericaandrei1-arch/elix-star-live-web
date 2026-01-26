@@ -30,17 +30,20 @@ export function ChatOverlay({ messages }: ChatOverlayProps) {
           <div key={msg.id} className="flex items-start text-[13px] leading-snug">
             <div className="inline-block max-w-full">
               <div className="flex flex-col gap-0.5">
-                {/* Name Row with Level Image */}
+                {/* Name Row with Badge Image */}
                 <div className="flex items-center gap-1.5">
                   {!msg.isSystem && (
-                     <div className="w-[45px] h-[25px] flex items-center justify-center shrink-0">
-                         <img 
-                             src={getLevelBadge(msg.level || 1)} 
-                             alt=""
-                             className="w-full h-full object-contain filter drop-shadow-md"
-                         />
-                     </div>
-                  )}
+                      <div className="w-[65px] h-[35px] flex items-center justify-center shrink-0 relative">
+                          <img 
+                              src={getLevelBadge(msg.level || 1)} 
+                              alt=""
+                              className="w-full h-full object-contain"
+                          />
+                          <span className="absolute inset-0 flex items-center justify-center text-yellow-300 text-[14px] font-black italic pt-1 pl-4 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
+                            {msg.level || 1}
+                          </span>
+                      </div>
+                   )}
                   <span className="font-bold text-gray-500 text-xs mt-1">
                     {msg.username}:
                   </span>

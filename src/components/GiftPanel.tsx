@@ -7,7 +7,7 @@ export const GIFTS = [
   { id: '3', name: 'Frostwing', coins: 4999, icon: '❄️', video: '/gifts/Frostwing Ascendant.webm', preview: '/gifts/Frostwing Ascendant.webm' },
   { id: '4', name: 'Hunted Castle', coins: 2999, icon: '🏰', video: '/gifts/Hunted Castel.webm', preview: '/gifts/Hunted Castel.webm' },
   { id: '5', name: 'Zeus', coins: 5999, icon: '⚡', video: '/gifts/Zeus.webm', preview: '/gifts/Zeus.webm' },
-  { id: '6', name: 'Majestic Bird', coins: 3999, icon: '🦅', video: '/gifts/majestic_ice_blue_mythic_bird_in_flight.webm', preview: '/gifts/majestic_ice_blue_mythic_bird_in_flight.webm' },
+  { id: '6', name: 'Majestic Bird', coins: 3999, icon: '🦅', video: 'https://cdn.pixabay.com/video/2022/11/22/140111-774358897_large.mp4', preview: 'https://cdn.pixabay.com/video/2022/11/22/140111-774358897_large.mp4' },
   { id: '7', name: 'Purple Crystal', coins: 9999, icon: '💎', video: '/gifts/purple_crystal.webm', preview: '/gifts/purple_crystal.webm' },
   { id: '8', name: 'Global Univ.', coins: 14999, icon: '🪐', video: '/gifts/Elix Global Universe.webm', preview: '/gifts/Elix Global Universe.webm' },
   { id: '9', name: 'Gold Univ.', coins: 19999, icon: '🌟', video: '/gifts/Elix Gold Universe.webm', preview: '/gifts/Elix Gold Universe.webm' },

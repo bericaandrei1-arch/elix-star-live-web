@@ -1,47 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VideoPlayer from '../components/VideoPlayer';
 import { useNavigate } from 'react-router-dom';
-
-const MOCK_VIDEOS = [
-  {
-    id: 1,
-    url: 'https://cdn.pixabay.com/video/2024/02/09/199958-911694865_large.mp4',
-    username: 'elix_star',
-    description: 'Chasing the sunset vibes 🌅 #elix #live',
-    likes: '1.2K',
-    comments: '85',
-    shares: '45',
-    song: 'Original Sound - Elix Star',
-    avatar: 'https://i.pravatar.cc/150?u=elix'
-  },
-  {
-    id: 2,
-    url: 'https://cdn.pixabay.com/video/2024/05/24/213560_large.mp4',
-    username: 'nature_lover',
-    description: 'Beautiful nature vibes 🌸 #nature #peace',
-    likes: '5.4K',
-    comments: '230',
-    shares: '890',
-    song: 'Nature Sounds - Relax',
-    avatar: 'https://i.pravatar.cc/150?u=bunny'
-  },
-  {
-    id: 3,
-    url: 'https://cdn.pixabay.com/video/2023/10/19/185714-876123049_large.mp4',
-    username: 'dreamer_01',
-    description: 'Family time is the best time ❤️ #family',
-    likes: '890',
-    comments: '34',
-    shares: '12',
-    song: 'Happy Moments - Family',
-    avatar: 'https://i.pravatar.cc/150?u=dreamer'
-  }
-];
+import { getLevelBadge } from '../utils/levelBadges';
+import { useVideoStore } from '../store/useVideoStore';
 
 export default function VideoFeed() {
-  const [activeVideoId, setActiveVideoId] = useState(MOCK_VIDEOS[0].id);
+  const { videos } = useVideoStore();
+  const [activeVideoId, setActiveVideoId] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (videos.length > 0) {
+      setActiveVideoId(videos[0].id);
+    }
+  }, [videos]);
 
   const handleScroll = () => {
     if (!containerRef.current) return;
@@ -51,8 +24,8 @@ export default function VideoFeed() {
     const height = container.clientHeight;
     
     const index = Math.round(scrollPosition / height);
-    if (MOCK_VIDEOS[index]) {
-      setActiveVideoId(MOCK_VIDEOS[index].id);
+    if (videos[index]) {
+      setActiveVideoId(videos[index].id);
     }
   };
 
@@ -67,7 +40,7 @@ export default function VideoFeed() {
                       top-0 h-[20vh]
                       md:-top-[100px] md:h-[350px] pointer-events-none">
         <img 
-          src="/Icons/ChatGPT Image Jan 24, 2026, 07_44_38 PM.png" 
+          src="/Icons/Top bar icon.png?v=2" 
           alt="Top Bar" 
           className="absolute inset-0 w-full h-full object-contain object-top"
         />
@@ -118,7 +91,7 @@ export default function VideoFeed() {
         </div>
       </div>
 
-      {MOCK_VIDEOS.map((video) => (
+      {videos.map((video) => (
         <div key={video.id} className="h-full w-full snap-start relative flex justify-center bg-black">
           {/* Constrain video width to match mobile/app view on desktop if desired, 
               or keep full width. User asked for "home page size", likely implying 

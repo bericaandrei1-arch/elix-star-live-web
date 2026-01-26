@@ -106,14 +106,16 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
   };
 
   return (
-    <div className="relative w-full h-full bg-black">
-      <video
-        ref={videoRef}
-        src={data.url}
-        loop
-        playsInline
-        className="w-full h-full object-cover"
-        onClick={togglePlay}
+    <div className="relative w-full h-screen bg-black snap-start overflow-hidden border-b border-gray-800 flex justify-center">
+      {/* Video Element - Limitat la lățimea unui telefon */}
+      <div className="absolute top-[15vh] bottom-[20vh] w-full max-w-[500px]">
+          <video
+            ref={videoRef}
+            src={data.url}
+            className="w-full h-full object-cover"
+            loop
+            playsInline
+            onClick={togglePlay}
         onError={(e) => {
             console.warn(`Video ${data.id} failed to load:`, e);
             // Fallback visualization
@@ -126,11 +128,12 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
             e.currentTarget.parentElement?.appendChild(errorText);
         }}
       />
+      </div>
 
       {/* Right Sidebar - Constrained to Right Edge */}
       <div className="absolute z-[200] right-[-117px] bottom-[150px] w-[75%] md:w-[300px] h-full pointer-events-none flex flex-col justify-end">
          <img 
-           src="/Icons/ChatGPT Image Jan 24, 2026, 06_57_16 PM.png" 
+           src="/Icons/Side bar icon.png?v=2" 
            alt="Right Sidebar Overlay" 
            className="w-full h-full object-contain object-right-bottom"
          />
