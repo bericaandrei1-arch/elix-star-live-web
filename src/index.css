@@ -48,3 +48,22 @@
   mask-image: linear-gradient(to bottom, transparent, black 20%);
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%);
 }
+
+/* Custom Thin Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}

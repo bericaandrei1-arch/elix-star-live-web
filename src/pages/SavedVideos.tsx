@@ -1,0 +1,45 @@
+import React from 'react';
+import { ArrowLeft, Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const SAVED_VIDEOS = [
+  { id: 1, url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4', views: '1.2M' },
+  { id: 2, url: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4', views: '850K' },
+  { id: 3, url: 'https://assets.mixkit.co/videos/preview/mixkit-mother-with-her-little-daughter-eating-a-marshmallow-in-nature-39764-large.mp4', views: '2.1M' },
+  { id: 4, url: 'https://assets.mixkit.co/videos/preview/mixkit-taking-photos-from-different-angles-of-a-model-34421-large.mp4', views: '500K' },
+];
+
+export default function SavedVideos() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-black text-white pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-4 border-b border-white/10">
+        <button onClick={() => navigate(-1)} className="p-1">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-lg font-bold">Saved Videos</h1>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-3 gap-0.5 p-0.5">
+        {SAVED_VIDEOS.map((video) => (
+          <div key={video.id} className="aspect-[3/4] bg-gray-900 relative cursor-pointer" onClick={() => navigate('/')}>
+             <video 
+               src={video.url} 
+               className="w-full h-full object-cover" 
+               muted 
+               loop 
+               onMouseOver={e => e.currentTarget.play()} 
+               onMouseOut={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+             />
+             <div className="absolute bottom-1 left-1 flex items-center gap-1 text-white text-xs drop-shadow-md">
+               <Bookmark size={12} fill="white" />
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

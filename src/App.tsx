@@ -11,6 +11,15 @@ import { BottomNav } from './components/BottomNav';
 import { useAuthStore } from './store/useAuthStore';
 import { cn } from './lib/utils';
 
+import SavedVideos from './pages/SavedVideos';
+import MusicFeed from './pages/MusicFeed';
+import FollowingFeed from './pages/FollowingFeed';
+import SearchPage from './pages/SearchPage';
+import Inbox from './pages/Inbox';
+import FriendsFeed from './pages/FriendsFeed';
+import EditProfile from './pages/EditProfile';
+import Settings from './pages/Settings';
+
 function App() {
   const { checkUser } = useAuthStore();
   const location = useLocation();
@@ -19,20 +28,27 @@ function App() {
     checkUser();
   }, [checkUser]);
 
-  const isFullScreen = location.pathname === '/' || location.pathname.startsWith('/live/');
+  const isFullScreen = location.pathname === '/' || location.pathname.startsWith('/live/') || location.pathname.startsWith('/music/') || location.pathname === '/following';
 
   return (
-    <div className="min-h-screen bg-background text-text font-sans">
+    <div className="min-h-screen bg-black text-white font-sans">
       <main className={cn("min-h-screen", !isFullScreen && "pb-32")}>
         <Routes>
           <Route path="/" element={<VideoFeed />} />
+          <Route path="/following" element={<FollowingFeed />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/live/:streamId" element={<LiveStream />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:userId" element={<Profile />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/upload" element={<Upload />} />
-          <Route path="/friends" element={<Empty title="Friends" />} />
-          <Route path="/inbox" element={<Empty title="Inbox" />} />
+          <Route path="/friends" element={<FriendsFeed />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/saved" element={<SavedVideos />} />
+          <Route path="/music/:songId" element={<MusicFeed />} />
         </Routes>
       </main>
       <BottomNav />

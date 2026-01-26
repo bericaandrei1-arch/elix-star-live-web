@@ -1,48 +1,48 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export function BottomNav() {
+export const BottomNav = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
-  
-  // Don't show on login/register/upload pages
-  if (['/login', '/register', '/upload'].includes(location.pathname)) return null;
+
+  // Hide Bottom Nav on Upload/Camera page and Live Stream
+  if (location.pathname === '/upload' || location.pathname.startsWith('/live/')) {
+    return null;
+  }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100]">
-      <div className="w-full relative h-[160px]">
-         {/* Full Width Bottom Navigation Image - 160px height - GOLD THEME */}
-         <img 
-           src="/Icons/Home page Icons.png" 
-           alt="Navigation Bar" 
-           className="w-full h-full object-fill filter invert-[76%] sepia-[47%] saturate-[762%] hue-rotate-[357deg] brightness-[91%] contrast-[88%]" 
-         />
+    // Responsive container: 
+    // Mobile: 20vh height, bottom-0 (visible)
+    // Desktop (md): 350px height, -bottom-150px (partially hidden)
+    <nav className="fixed left-0 right-0 z-[300] pointer-events-none flex items-end justify-center
+                    bottom-0 h-[20vh]
+                    md:-bottom-[150px] md:h-[350px]">
+       <div className="w-full h-full relative pointer-events-none">
+          {/* Imaginea Responsive */}
+          <img 
+            src="/Icons/ChatGPT Image Jan 24, 2026, 06_53_05 PM.png" 
+            alt="Navigation Bar" 
+            className="w-full h-full object-contain object-bottom" 
+          />
 
-         {/* Invisible Clickable Areas Overlay */}
-         <div className="absolute inset-0 flex w-full h-full">
-            
-            {/* 1. Home Area (Left) */}
-            <Link to="/" className="flex-1 h-full" aria-label="Home" />
-
-            {/* 2. Friends Area */}
-            <Link to="/friends" className="flex-1 h-full" aria-label="Friends" />
-
-            {/* 3. Plus / Upload Area (Center) */}
-            <Link to="/upload" className="flex-1 h-full" aria-label="Upload" />
-
-            {/* 4. Inbox Area */}
-            <Link to="/inbox" className="flex-1 h-full" aria-label="Inbox" />
-
-            {/* 5. Profile Area (Right) */}
-            <Link 
-              to={user ? `/profile/${user.id}` : '/login'} 
-              className="flex-1 h-full" 
-              aria-label="Profile" 
-            />
-
-         </div>
-      </div>
+          {/* Clickable Zones (Hitboxes) - FINAL (Invisible & Absolute) */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none z-[200]">
+             {/* 1. Home - Redirects to Feed */}
+             <div onClick={() => navigate('/')} className="absolute left-[32%] bottom-[182px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Home" />
+             
+             {/* 2. Friends */}
+             <div onClick={() => navigate('/friends')} className="absolute left-[39.5%] bottom-[170px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Friends" />
+             
+             {/* 3. Upload (+) */}
+             <div onClick={() => navigate('/upload')} className="absolute left-1/2 -translate-x-1/2 bottom-[210px] w-8 h-8 md:w-14 md:h-14 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Upload" />
+             
+             {/* 4. Inbox */}
+             <div onClick={() => navigate('/inbox')} className="absolute right-[39.5%] bottom-[165px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Inbox" />
+             
+             {/* 5. Profile */}
+             <div onClick={() => navigate('/profile/me')} className="absolute right-[32%] bottom-[165px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Profile" />
+          </div>
+       </div>
     </nav>
   );
-}
+};
