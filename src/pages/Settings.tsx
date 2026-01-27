@@ -1,9 +1,11 @@
 import React from 'react';
 import { ArrowLeft, User, Lock, Shield, CircleHelp, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { signOut } = useAuthStore();
 
   const items = [
       { icon: User, label: 'Account' },
@@ -13,7 +15,8 @@ export default function Settings() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
+    <div className="min-h-screen bg-black text-white p-4 flex justify-center">
+      <div className="w-full max-w-[500px]">
         <header className="flex items-center justify-between mb-6">
             <button onClick={() => navigate(-1)}><ArrowLeft size={24} /></button>
             <h1 className="font-bold text-lg">Settings and privacy</h1>
@@ -30,7 +33,13 @@ export default function Settings() {
         </div>
 
         <div className="mt-8 border-t border-gray-800 pt-4">
-             <div className="flex items-center p-4 hover:bg-gray-900 cursor-pointer text-red-500">
+             <div
+               className="flex items-center p-4 hover:bg-gray-900 cursor-pointer text-red-500"
+               onClick={async () => {
+                 await signOut();
+                 navigate('/login', { replace: true });
+               }}
+             >
                 <LogOut size={20} className="mr-4" />
                 <span className="text-base">Log out</span>
             </div>
@@ -39,6 +48,7 @@ export default function Settings() {
         <div className="mt-12 text-center text-xs text-gray-600">
             v1.0.0 (12345)
         </div>
+      </div>
     </div>
   );
 }

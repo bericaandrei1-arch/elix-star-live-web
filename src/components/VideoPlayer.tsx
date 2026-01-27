@@ -21,8 +21,8 @@ interface VideoPlayerProps {
 export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(isActive);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  // const [isLiked, setIsLiked] = useState(false);
+  // const [isSaved, setIsSaved] = useState(false);
   
   const [showComments, setShowComments] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
@@ -120,7 +120,7 @@ export default function VideoPlayer({ data, isActive }: VideoPlayerProps) {
             console.warn(`Video ${data.id} failed to load:`, e);
             // Fallback visualization
             e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-gray-900', 'to-gray-800');
+            e.currentTarget.parentElement?.classList.add('bg-black');
             // Optionally add a text or icon indicating error
             const errorText = document.createElement('div');
             errorText.className = 'absolute inset-0 flex items-center justify-center text-white/50 text-sm';

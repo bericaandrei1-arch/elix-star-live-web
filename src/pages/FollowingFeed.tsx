@@ -3,18 +3,19 @@ import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const FOLLOWING_VIDEOS = [
-  { id: 1, url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4' },
-  { id: 2, url: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4' },
-  { id: 3, url: 'https://assets.mixkit.co/videos/preview/mixkit-mother-with-her-little-daughter-eating-a-marshmallow-in-nature-39764-large.mp4' },
+  { id: 1, url: '/gifts/Lightning Hypercar.mp4' },
+  { id: 2, url: '/gifts/Emerald Colossus Rhino.mp4' },
+  { id: 3, url: '/gifts/Majestic ice unicorn in enchanted snow.mp4' },
 ];
 
 export default function FollowingFeed() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-4 border-b border-white/10">
+    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+      <div className="w-full max-w-[500px]">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-4 border-b border-white/10">
         <button onClick={() => navigate(-1)} className="p-1">
           <ArrowLeft size={24} />
         </button>
@@ -48,6 +49,7 @@ export default function FollowingFeed() {
           <p>Videos from people you follow will appear here.</p>
         </div>
       )}
+      </div>
     </div>
   );
 }

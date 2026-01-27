@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import VideoPlayer from '../components/VideoPlayer';
+import EnhancedVideoPlayer from '../components/EnhancedVideoPlayer';
 import { useNavigate } from 'react-router-dom';
-import { getLevelBadge } from '../utils/levelBadges';
 import { useVideoStore } from '../store/useVideoStore';
 
 export default function VideoFeed() {
   const { videos } = useVideoStore();
-  const [activeVideoId, setActiveVideoId] = useState(0);
+  const [activeVideoId, setActiveVideoId] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -15,6 +14,20 @@ export default function VideoFeed() {
       setActiveVideoId(videos[0].id);
     }
   }, [videos]);
+
+  const handleVideoEnd = (videoId: string) => {
+    // Auto-scroll to next video when current one ends
+    const currentIndex = videos.findIndex(v => v.id === videoId);
+    if (currentIndex < videos.length - 1) {
+      const container = containerRef.current;
+      if (container) {
+        container.scrollTo({
+          top: (currentIndex + 1) * container.clientHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
 
   const handleScroll = () => {
     if (!containerRef.current) return;
@@ -97,9 +110,10 @@ export default function VideoFeed() {
               or keep full width. User asked for "home page size", likely implying 
               a constrained container similar to the UI bars. */}
           <div className="w-full h-full md:w-[500px] relative">
-            <VideoPlayer 
-              data={video} 
+            <EnhancedVideoPlayer 
+              videoId={video.id} 
               isActive={activeVideoId === video.id}
+              onVideoEnd={() => handleVideoEnd(video.id)}
             />
           </div>
         </div>

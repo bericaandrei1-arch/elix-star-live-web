@@ -1,58 +1,467 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface User {
+  id: string;
+  username: string;
+  name: string;
+  avatar: string;
+  isVerified?: boolean;
+  followers: number;
+  following: number;
+  isFollowing?: boolean;
+}
+
+interface Comment {
+  id: string;
+  userId: string;
+  username: string;
+  avatar: string;
+  text: string;
+  likes: number;
+  time: string;
+  isLiked?: boolean;
+  replies?: Comment[];
+}
+
+interface Music {
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  duration: string;
+  coverUrl?: string;
+}
+
+interface VideoStats {
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+}
 
 interface Video {
-  id: number | string;
+  id: string;
   url: string;
-  username: string;
+  thumbnail?: string;
+  duration: string;
+  user: User;
   description: string;
-  likes: string;
-  comments: string;
-  shares: string;
-  song: string;
-  avatar: string;
-  isLocal?: boolean; // Să știm că e filmat de noi
+  hashtags: string[];
+  music: Music;
+  stats: VideoStats;
+  createdAt: string;
+  location?: string;
+  isLiked: boolean;
+  isSaved: boolean;
+  isFollowing: boolean;
+  comments: Comment[];
+  quality?: 'auto' | '720p' | '1080p';
+  privacy?: 'public' | 'friends' | 'private';
 }
 
 interface VideoStore {
   videos: Video[];
+  likedVideos: string[];
+  savedVideos: string[];
+  followingUsers: string[];
+  
+  // Video actions
   addVideo: (video: Video) => void;
+  removeVideo: (videoId: string) => void;
+  updateVideo: (videoId: string, updates: Partial<Video>) => void;
+  
+  // Like actions
+  toggleLike: (videoId: string) => void;
+  getLikedVideos: () => Video[];
+  
+  // Save actions
+  toggleSave: (videoId: string) => void;
+  getSavedVideos: () => Video[];
+  
+  // Follow actions
+  toggleFollow: (userId: string) => void;
+  getFollowingUsers: () => User[];
+  
+  // Comment actions
+  addComment: (videoId: string, comment: Omit<Comment, 'id' | 'time'>) => void;
+  deleteComment: (videoId: string, commentId: string) => void;
+  toggleCommentLike: (videoId: string, commentId: string) => void;
+  
+  // Analytics
+  incrementViews: (videoId: string) => void;
+  getTrendingVideos: () => Video[];
+  getRecommendedVideos: (userId: string) => Video[];
 }
 
-export const useVideoStore = create<VideoStore>((set) => ({
-  videos: [
+export const useVideoStore = create<VideoStore>()(
+  persist(
+    (set, get) => ({
+      videos: [
+        {
+          id: '1',
+          url: '/gifts/Blue Flame Racer.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=1',
+          duration: '0:34',
+          user: {
+            id: 'user1',
+            username: 'elix_star',
+            name: 'Elix Star',
+            avatar: 'https://i.pravatar.cc/150?u=elix',
+            isVerified: true,
+            followers: 12500,
+            following: 890
+          },
+          description: 'Chasing the sunset vibes 🌅 #elix #live #sunset #vibes',
+          hashtags: ['elix', 'live', 'sunset', 'vibes'],
+          music: {
+            id: 'music1',
+            title: 'Original Sound',
+            artist: 'Elix Star',
+            duration: '0:34'
+          },
+          stats: {
+            views: 125000,
+            likes: 1200,
+            comments: 85,
+            shares: 45,
+            saves: 230
+          },
+          createdAt: '2024-01-15T10:30:00Z',
+          location: 'Malibu Beach, CA',
+          isLiked: false,
+          isSaved: false,
+          isFollowing: false,
+          comments: [],
+          quality: 'auto',
+          privacy: 'public'
+        },
+        {
+          id: '2',
+          url: '/gifts/Emerald Sky Guardian.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=2',
+          duration: '1:42',
+          user: {
+            id: 'user2',
+            username: 'nature_lover',
+            name: 'Nature Explorer',
+            avatar: 'https://i.pravatar.cc/150?u=bunny',
+            isVerified: false,
+            followers: 5400,
+            following: 1200
+          },
+          description: 'Beautiful nature vibes 🌸 #nature #peace #forest #relax',
+          hashtags: ['nature', 'peace', 'forest', 'relax'],
+          music: {
+            id: 'music2',
+            title: 'Nature Sounds',
+            artist: 'Relaxation Masters',
+            duration: '1:42'
+          },
+          stats: {
+            views: 89000,
+            likes: 5400,
+            comments: 230,
+            shares: 890,
+            saves: 1200
+          },
+          createdAt: '2024-01-14T15:45:00Z',
+          location: 'Redwood Forest, CA',
+          isLiked: true,
+          isSaved: false,
+          isFollowing: true,
+          comments: [],
+          quality: 'auto',
+          privacy: 'public'
+        },
+        {
+          id: '3',
+          url: '/gifts/Falcon King Delivery.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=3',
+          duration: '0:15',
+          user: {
+            id: 'user3',
+            username: 'dreamer_01',
+            name: 'Dream Catcher',
+            avatar: 'https://i.pravatar.cc/150?u=dreamer',
+            isVerified: false,
+            followers: 890,
+            following: 340
+          },
+          description: 'Family time is the best time ❤️ #family #love #together',
+          hashtags: ['family', 'love', 'together'],
+          music: {
+            id: 'music3',
+            title: 'Happy Moments',
+            artist: 'Family Band',
+            duration: '0:15'
+          },
+          stats: {
+            views: 45000,
+            likes: 890,
+            comments: 34,
+            shares: 12,
+            saves: 450
+          },
+          createdAt: '2024-01-13T18:20:00Z',
+          location: 'Family Home',
+          isLiked: false,
+          isSaved: true,
+          isFollowing: false,
+          comments: [],
+          quality: 'auto',
+          privacy: 'public'
+        }
+      ],
+      likedVideos: [],
+      savedVideos: ['3'],
+      followingUsers: ['user2'],
+
+      // Video actions
+      addVideo: (video) => set((state) => ({ 
+        videos: [video, ...state.videos] 
+      })),
+      
+      removeVideo: (videoId) => set((state) => ({
+        videos: state.videos.filter(video => video.id !== videoId)
+      })),
+      
+      updateVideo: (videoId, updates) => set((state) => ({
+        videos: state.videos.map(video => 
+          video.id === videoId ? { ...video, ...updates } : video
+        )
+      })),
+
+      // Like actions
+      toggleLike: (videoId) => set((state) => {
+        const video = state.videos.find(v => v.id === videoId);
+        if (!video) return state;
+
+        const isLiked = video.isLiked;
+        const newLikedVideos = isLiked 
+          ? state.likedVideos.filter(id => id !== videoId)
+          : [...state.likedVideos, videoId];
+
+        return {
+          videos: state.videos.map(v => 
+            v.id === videoId 
+              ? { 
+                  ...v, 
+                  isLiked: !isLiked,
+                  stats: {
+                    ...v.stats,
+                    likes: isLiked ? v.stats.likes - 1 : v.stats.likes + 1
+                  }
+                }
+              : v
+          ),
+          likedVideos: newLikedVideos
+        };
+      }),
+
+      getLikedVideos: () => {
+        const { videos, likedVideos } = get();
+        return videos.filter(video => likedVideos.includes(video.id));
+      },
+
+      // Save actions
+      toggleSave: (videoId) => set((state) => {
+        const video = state.videos.find(v => v.id === videoId);
+        if (!video) return state;
+
+        const isSaved = video.isSaved;
+        const newSavedVideos = isSaved 
+          ? state.savedVideos.filter(id => id !== videoId)
+          : [...state.savedVideos, videoId];
+
+        return {
+          videos: state.videos.map(v => 
+            v.id === videoId 
+              ? { 
+                  ...v, 
+                  isSaved: !isSaved,
+                  stats: {
+                    ...v.stats,
+                    saves: isSaved ? v.stats.saves - 1 : v.stats.saves + 1
+                  }
+                }
+              : v
+          ),
+          savedVideos: newSavedVideos
+        };
+      }),
+
+      getSavedVideos: () => {
+        const { videos, savedVideos } = get();
+        return videos.filter(video => savedVideos.includes(video.id));
+      },
+
+      // Follow actions
+      toggleFollow: (userId) => set((state) => {
+        const newFollowingUsers = state.followingUsers.includes(userId)
+          ? state.followingUsers.filter(id => id !== userId)
+          : [...state.followingUsers, userId];
+
+        return {
+          videos: state.videos.map(video => 
+            video.user.id === userId 
+              ? { 
+                  ...video, 
+                  isFollowing: !video.isFollowing,
+                  user: {
+                    ...video.user,
+                    followers: video.isFollowing 
+                      ? video.user.followers - 1 
+                      : video.user.followers + 1
+                  }
+                }
+              : video
+          ),
+          followingUsers: newFollowingUsers
+        };
+      }),
+
+      getFollowingUsers: () => {
+        const { videos, followingUsers } = get();
+        return videos
+          .map(video => video.user)
+          .filter(user => followingUsers.includes(user.id));
+      },
+
+      // Comment actions
+      addComment: (videoId, commentData) => set((state) => {
+        const newComment: Comment = {
+          ...commentData,
+          id: `comment_${Date.now()}_${Math.random()}`,
+          time: 'now'
+        };
+
+        return {
+          videos: state.videos.map(video => 
+            video.id === videoId 
+              ? { 
+                  ...video, 
+                  comments: [...video.comments, newComment],
+                  stats: {
+                    ...video.stats,
+                    comments: video.stats.comments + 1
+                  }
+                }
+              : video
+          )
+        };
+      }),
+
+      deleteComment: (videoId, commentId) => set((state) => ({
+        videos: state.videos.map(video => 
+          video.id === videoId 
+            ? { 
+                ...video, 
+                comments: video.comments.filter(c => c.id !== commentId),
+                stats: {
+                  ...video.stats,
+                  comments: Math.max(0, video.stats.comments - 1)
+                }
+              }
+            : video
+        )
+      })),
+
+      toggleCommentLike: (videoId, commentId) => set((state) => ({
+        videos: state.videos.map(video => 
+          video.id === videoId 
+            ? {
+                ...video,
+                comments: video.comments.map(comment => 
+                  comment.id === commentId 
+                    ? { 
+                        ...comment, 
+                        isLiked: !comment.isLiked,
+                        likes: comment.isLiked 
+                          ? comment.likes - 1 
+                          : comment.likes + 1
+                      }
+                    : comment
+                )
+              }
+            : video
+        )
+      })),
+
+      // Analytics
+      incrementViews: (videoId) => set((state) => ({
+        videos: state.videos.map(video => 
+          video.id === videoId 
+            ? { 
+                ...video, 
+                stats: {
+                  ...video.stats,
+                  views: video.stats.views + 1
+                }
+              }
+            : video
+        )
+      })),
+
+      getTrendingVideos: () => {
+        const { videos } = get();
+        return [...videos].sort((a, b) => {
+          const engagementA = (a.stats.likes + a.stats.comments + a.stats.shares) / a.stats.views;
+          const engagementB = (b.stats.likes + b.stats.comments + b.stats.shares) / b.stats.views;
+          return engagementB - engagementA;
+        });
+      },
+
+      getRecommendedVideos: () => {
+        const { videos, likedVideos, followingUsers } = get();
+        const userLikedTags = videos
+          .filter(v => likedVideos.includes(v.id))
+          .flatMap(v => v.hashtags);
+        
+        const userFollowing = followingUsers;
+        
+        return videos
+          .filter(video => !likedVideos.includes(video.id))
+          .map(video => {
+            let score = 0;
+            
+            // Boost for liked hashtags
+            const commonTags = video.hashtags.filter(tag => 
+              userLikedTags.includes(tag)
+            ).length;
+            score += commonTags * 2;
+            
+            // Boost for following users
+            if (userFollowing.includes(video.user.id)) {
+              score += 5;
+            }
+            
+            // Boost for verified users
+            if (video.user.isVerified) {
+              score += 1;
+            }
+            
+            // Boost for recent content
+            const daysSinceUpload = (Date.now() - new Date(video.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceUpload < 7) {
+              score += 1;
+            }
+            
+            return { video, score };
+          })
+          .sort((a, b) => b.score - a.score)
+          .map(({ video }) => video)
+          .slice(0, 10);
+      }
+    }),
     {
-      id: 1,
-      url: 'https://cdn.pixabay.com/video/2024/02/09/199958-911694865_large.mp4',
-      username: 'elix_star',
-      description: 'Chasing the sunset vibes 🌅 #elix #live',
-      likes: '1.2K',
-      comments: '85',
-      shares: '45',
-      song: 'Original Sound - Elix Star',
-      avatar: 'https://i.pravatar.cc/150?u=elix'
-    },
-    {
-      id: 2,
-      url: 'https://cdn.pixabay.com/video/2024/05/24/213560_large.mp4',
-      username: 'nature_lover',
-      description: 'Beautiful nature vibes 🌸 #nature #peace',
-      likes: '5.4K',
-      comments: '230',
-      shares: '890',
-      song: 'Nature Sounds - Relax',
-      avatar: 'https://i.pravatar.cc/150?u=bunny'
-    },
-    {
-      id: 3,
-      url: 'https://cdn.pixabay.com/video/2023/10/19/185714-876123049_large.mp4',
-      username: 'dreamer_01',
-      description: 'Family time is the best time ❤️ #family',
-      likes: '890',
-      comments: '34',
-      shares: '12',
-      song: 'Happy Moments - Family',
-      avatar: 'https://i.pravatar.cc/150?u=dreamer'
+      name: 'video-store',
+      partialize: (state) => ({
+        likedVideos: state.likedVideos,
+        savedVideos: state.savedVideos,
+        followingUsers: state.followingUsers
+      })
     }
-  ],
-  addVideo: (video) => set((state) => ({ videos: [video, ...state.videos] })),
-}));
+  )
+);

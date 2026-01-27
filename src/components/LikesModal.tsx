@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, UserPlus } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface LikeUser {
   id: number;

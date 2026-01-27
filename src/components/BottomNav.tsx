@@ -6,7 +6,12 @@ export const BottomNav = () => {
   const location = useLocation();
 
   // Hide Bottom Nav on Upload/Camera page and Live Stream
-  if (location.pathname === '/upload' || location.pathname.startsWith('/live/')) {
+  if (
+    location.pathname === '/upload' ||
+    location.pathname.startsWith('/live/') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register'
+  ) {
     return null;
   }
 

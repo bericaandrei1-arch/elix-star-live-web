@@ -3,19 +3,20 @@ import { ArrowLeft, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SAVED_VIDEOS = [
-  { id: 1, url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4', views: '1.2M' },
-  { id: 2, url: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4', views: '850K' },
-  { id: 3, url: 'https://assets.mixkit.co/videos/preview/mixkit-mother-with-her-little-daughter-eating-a-marshmallow-in-nature-39764-large.mp4', views: '2.1M' },
-  { id: 4, url: 'https://assets.mixkit.co/videos/preview/mixkit-taking-photos-from-different-angles-of-a-model-34421-large.mp4', views: '500K' },
+  { id: 1, url: '/gifts/Elix Live Universe.webm', views: '1.2M' },
+  { id: 2, url: '/gifts/Elix Gold Universe.webm', views: '850K' },
+  { id: 3, url: '/gifts/Elix Global Universe.webm', views: '2.1M' },
+  { id: 4, url: '/gifts/Frostwing Ascendant.webm', views: '500K' },
 ];
 
 export default function SavedVideos() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-4 border-b border-white/10">
+    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+      <div className="w-full max-w-[500px]">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-4 border-b border-white/10">
         <button onClick={() => navigate(-1)} className="p-1">
           <ArrowLeft size={24} />
         </button>
@@ -39,6 +40,7 @@ export default function SavedVideos() {
              </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

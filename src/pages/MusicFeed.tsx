@@ -3,12 +3,12 @@ import { ArrowLeft, Music, Play } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const MUSIC_VIDEOS = [
-  { id: 1, url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4' },
-  { id: 2, url: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4' },
-  { id: 3, url: 'https://assets.mixkit.co/videos/preview/mixkit-mother-with-her-little-daughter-eating-a-marshmallow-in-nature-39764-large.mp4' },
-  { id: 4, url: 'https://assets.mixkit.co/videos/preview/mixkit-taking-photos-from-different-angles-of-a-model-34421-large.mp4' },
-  { id: 5, url: 'https://assets.mixkit.co/videos/preview/mixkit-winter-fashion-cold-looking-woman-concept-video-39874-large.mp4' },
-  { id: 6, url: 'https://assets.mixkit.co/videos/preview/mixkit-womans-feet-splashing-in-the-pool-1261-large.mp4' },
+  { id: 1, url: '/gifts/Elix Lucky Kitty.mp4' },
+  { id: 2, url: '/gifts/Emerald Sky Guardian.mp4' },
+  { id: 3, url: '/gifts/Ember Dragon Egg.mp4' },
+  { id: 4, url: '/gifts/Mythic Fire Unicorn.mp4' },
+  { id: 5, url: '/gifts/Zeus.webm' },
+  { id: 6, url: '/gifts/Beast Relic of the Ancients.webm' },
 ];
 
 export default function MusicFeed() {
@@ -16,9 +16,10 @@ export default function MusicFeed() {
   const { songId } = useParams();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header Info */}
-      <div className="p-4 pt-10 flex gap-4 bg-gradient-to-b from-gray-900 to-black">
+    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+      <div className="w-full max-w-[500px]">
+        {/* Header Info */}
+        <div className="p-4 pt-10 flex gap-4 bg-gradient-to-b from-gray-900 to-black">
          <div className="w-24 h-24 bg-gray-800 rounded-md flex items-center justify-center shrink-0">
             <Music size={40} className="text-white/50" />
          </div>
@@ -52,6 +53,7 @@ export default function MusicFeed() {
              />
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

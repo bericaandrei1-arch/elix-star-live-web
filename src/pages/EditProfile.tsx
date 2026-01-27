@@ -6,7 +6,8 @@ export default function EditProfile() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
+    <div className="min-h-screen bg-black text-white p-4 flex justify-center">
+      <div className="w-full max-w-[500px]">
         <header className="flex items-center justify-between mb-8">
             <button onClick={() => navigate(-1)}><ArrowLeft size={24} /></button>
             <h1 className="font-bold text-lg">Edit profile</h1>
@@ -43,6 +44,7 @@ export default function EditProfile() {
                 <input type="text" defaultValue="linktr.ee/username" className="w-3/4 bg-transparent border-b border-gray-700 focus:border-white outline-none py-1" />
             </div>
         </div>
+      </div>
     </div>
   );
 }

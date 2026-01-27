@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Zap, Clock, Music, Image as ImageIcon, Check, Trash2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Zap, Clock, Music, Image as ImageIcon, Check, Trash2, Play, Square, RotateCcw } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 
 export default function Upload() {
@@ -8,12 +8,82 @@ export default function Upload() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [chunks, setChunks] = useState<Blob[]>([]);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+  const [showMusicModal, setShowMusicModal] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<string | null>(null);
+  const [playingTrackId, setPlayingTrackId] = useState<number | null>(null); // Track currently playing preview
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null); // For list preview
+  const backgroundAudioRef = useRef<HTMLAudioElement | null>(null); // For video background
+
   const { addVideo } = useVideoStore();
 
-  // Start Camera
+  // Mock tracks with reliable MP3 URLs
+   const musicTracks = [
+     { id: 1, title: 'No Music', artist: '-', duration: '0:00', url: '' },
+     { id: 2, title: 'SoundHelix Song 1', artist: 'SoundHelix', duration: '6:12', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+     { id: 3, title: 'SoundHelix Song 8', artist: 'SoundHelix', duration: '5:25', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
+     { id: 4, title: 'Enthusiast', artist: 'Tours', duration: '3:15', url: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Tours/Enthusiast/Tours_-_01_-_Enthusiast.mp3' },
+     { id: 5, title: 'Moonlight', artist: 'Beethoven', duration: '5:15', url: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f7/Moonlight_Sonata_1st_Movement.ogg/Moonlight_Sonata_1st_Movement.ogg.mp3' },
+   ];
+
+   const handleSelectMusic = (track: typeof musicTracks[0]) => {
+       setSelectedSong(track.title);
+       setShowMusicModal(false);
+       // Stop preview if playing
+       if (previewAudioRef.current) {
+           previewAudioRef.current.pause();
+           setPlayingTrackId(null);
+       }
+   };
+ 
+   const togglePreview = (e: React.MouseEvent, track: typeof musicTracks[0]) => {
+       e.stopPropagation(); // Don't select, just play
+       
+       if (playingTrackId === track.id) {
+           // Stop
+           if (previewAudioRef.current) {
+               previewAudioRef.current.pause();
+               setPlayingTrackId(null);
+           }
+       } else {
+           // Play new
+           if (previewAudioRef.current) {
+               previewAudioRef.current.pause();
+           }
+           // Create new audio or reuse
+           if (track.url) {
+               previewAudioRef.current = new Audio(track.url);
+               previewAudioRef.current.volume = 1.0;
+               previewAudioRef.current.play()
+                   .then(() => console.log("Audio playing:", track.title))
+                   .catch(e => {
+                       console.error("Audio play failed", e);
+                       alert("Could not play audio. Check console for details.");
+                   });
+               setPlayingTrackId(track.id);
+               
+               // Auto stop at end
+               previewAudioRef.current.onended = () => setPlayingTrackId(null);
+           } else {
+               // No URL (No Music)
+               setPlayingTrackId(null);
+           }
+       }
+   };
+
+  // Auto-select a random song on mount if none selected
+   useEffect(() => {
+       if (!selectedSong) {
+           // Skip index 0 (Original Sound) if you want a real song, or include it
+           const randomTrack = musicTracks[Math.floor(Math.random() * (musicTracks.length - 1)) + 1]; 
+           setSelectedSong(randomTrack.title);
+       }
+   }, []);
+
+   // Start Camera
   useEffect(() => {
     async function startCamera() {
       try {
@@ -46,6 +116,7 @@ export default function Upload() {
       const mediaRecorder = new MediaRecorder(stream);
       
       setChunks([]); // Clear previous chunks
+      setIsPaused(false);
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -54,11 +125,7 @@ export default function Upload() {
       };
 
       mediaRecorder.onstop = () => {
-        // Create blob when stopped
-        // We need to wait a bit for the last chunk or handle it in state effect
-        // But for simplicity, we'll assume chunks are ready or use a slight delay logic if needed
-        // Actually, we need to access the LATEST chunks state. 
-        // A better way is to do this creation in a useEffect dependent on isRecording going false
+        // Blob creation happens in useEffect when chunks update and recording is stopped fully
       };
 
       mediaRecorder.start();
@@ -67,44 +134,119 @@ export default function Upload() {
     }
   };
 
-  const stopRecording = () => {
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+      setIsRecording(false);
+      setIsPaused(true);
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+      setIsRecording(true);
+      setIsPaused(false);
+    }
+  };
+
+  const stopRecordingFinal = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setIsPaused(false);
+      // This will trigger the useEffect to create the blob URL
     }
   };
 
   // Watch for recording stop to create URL
   useEffect(() => {
-    if (!isRecording && chunks.length > 0) {
+    // Only create URL if we fully stopped (not just paused) and have chunks
+    if (!isRecording && !isPaused && chunks.length > 0) {
         const blob = new Blob(chunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         setRecordedVideoUrl(url);
     }
-  }, [isRecording, chunks]);
+  }, [isRecording, isPaused, chunks]);
 
   const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
+    if (!isRecording && !isPaused) {
       startRecording();
+    } else if (isRecording) {
+      pauseRecording();
+    } else if (isPaused) {
+      resumeRecording();
     }
   };
+
+  // Audio Preview Logic for Recorded Video
+  useEffect(() => {
+      if (recordedVideoUrl && selectedSong) {
+          const track = musicTracks.find(t => t.title === selectedSong);
+          if (track && track.url) {
+              // Stop any previous background
+              if (backgroundAudioRef.current) {
+                  backgroundAudioRef.current.pause();
+              }
+              
+              // Start backing track
+              backgroundAudioRef.current = new Audio(track.url);
+              backgroundAudioRef.current.loop = true;
+              backgroundAudioRef.current.volume = 0.5; // Background volume
+              backgroundAudioRef.current.play().catch(e => console.log("Auto play audio failed", e));
+          }
+      } else if (backgroundAudioRef.current) {
+          // If no song selected or no video, stop background
+          backgroundAudioRef.current.pause();
+      }
+
+      return () => {
+          if (backgroundAudioRef.current) {
+              backgroundAudioRef.current.pause();
+              // Don't null it here to allow resume if re-rendered, but pause is safe
+          }
+      };
+  }, [recordedVideoUrl, selectedSong]);
 
   const handlePost = () => {
       if (!recordedVideoUrl) return;
 
       const newVideo = {
-          id: Date.now(),
+          id: Date.now().toString(),
           url: recordedVideoUrl,
-          username: 'me', // Current user
+          thumbnail: `https://picsum.photos/400/600?random=${Date.now()}`,
+          duration: '0:15', // Default duration
+          user: {
+            id: 'current_user',
+            username: 'me',
+            name: 'Current User',
+            avatar: 'https://ui-avatars.com/api/?name=Me',
+            isVerified: false,
+            followers: 1234,
+            following: 567
+          },
           description: 'My new video! 🎥 #creation',
-          likes: '0',
-          comments: '0',
-          shares: '0',
-          song: 'Original Sound',
-          avatar: 'https://ui-avatars.com/api/?name=Me',
-          isLocal: true
+          hashtags: ['creation', 'video'],
+          music: {
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Current User',
+            duration: '0:15'
+          },
+          stats: {
+            views: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0
+          },
+          createdAt: new Date().toISOString(),
+          isLiked: false,
+          isSaved: false,
+          isFollowing: false,
+          comments: [],
+          quality: 'auto' as const,
+          privacy: 'public' as const
       };
 
       addVideo(newVideo);
@@ -139,7 +281,7 @@ export default function Upload() {
       
       {/* PREVIEW MODE */}
        {recordedVideoUrl ? (
-           <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
+           <div className="relative z-10 w-full max-w-[500px] mx-auto h-[100dvh] bg-black flex flex-col items-center justify-center">
                <video 
                    src={recordedVideoUrl} 
                    className="w-full h-full object-cover z-0" 
@@ -157,21 +299,41 @@ export default function Upload() {
                     />
                </div>
 
+               {/* Preview Top Controls */}
+               <div className="absolute top-[2%] left-0 right-0 z-20 flex justify-center pointer-events-auto">
+                    <button 
+                        className="w-40 h-8 rounded-full flex items-center justify-center gap-1 bg-black/50 backdrop-blur-md border border-white/20"
+                        onClick={() => setShowMusicModal(true)}
+                    >
+                        <Music size={14} className="text-white" />
+                        <span className="text-white text-xs font-bold truncate max-w-[120px]">
+                            {selectedSong || "Add Sound"}
+                        </span>
+                    </button>
+               </div>
+
                {/* Preview Controls - Custom Buttons Over Overlay */}
                <div className="absolute bottom-[10%] left-0 right-0 flex justify-center gap-20 z-20 pointer-events-auto">
                    <button 
                        onClick={handleDiscard}
-                       className="w-16 h-16 bg-gray-800/80 rounded-full flex items-center justify-center text-white border-2 border-red-500 hover:bg-red-600 transition-colors"
-                       title="Discard"
+                       className="flex flex-col items-center gap-2 group"
+                       title="Retake"
                    >
-                       <Trash2 />
+                       <div className="w-16 h-16 bg-gray-800/80 rounded-full flex items-center justify-center text-white border-2 border-white group-hover:bg-gray-700">
+                           <RotateCcw size={32} />
+                       </div>
+                       <span className="text-white font-bold text-sm shadow-black drop-shadow-md">Retake</span>
                    </button>
+
                    <button 
                        onClick={handlePost}
-                       className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg animate-pulse hover:scale-110 transition-transform"
-                       title="Post"
+                       className="flex flex-col items-center gap-2 group"
+                       title="Post / Play"
                    >
-                       <Check size={32} />
+                       <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white group-hover:scale-110 transition-transform">
+                           <Check size={32} />
+                       </div>
+                       <span className="text-white font-bold text-sm shadow-black drop-shadow-md">Post</span>
                    </button>
                </div>
            </div>
@@ -216,15 +378,18 @@ export default function Upload() {
 
                   {/* 2. Sound/Music */}
                   <button 
-                    className="absolute top-[2%] left-1/2 -translate-x-1/2 w-28 h-8 rounded-full flex items-center justify-center gap-1 bg-blue-500/50"
-                    onClick={() => alert('Add Sound')}
+                    className="absolute top-[2%] left-1/2 -translate-x-1/2 w-40 h-8 rounded-full flex items-center justify-center gap-1 bg-black/50 backdrop-blur-md border border-white/20 z-[150]"
+                    onClick={() => setShowMusicModal(true)}
                   >
-                    Music
+                    <Music size={14} className="text-white" />
+                    <span className="text-white text-xs font-bold truncate max-w-[120px]">
+                        {selectedSong || "Add Sound"}
+                    </span>
                   </button>
 
                   {/* 3. Flip Camera */}
                   <button 
-                    className="absolute top-[13%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
+                    className="absolute top-[18%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
                     onClick={() => alert('Flip Camera')}
                   >
                     <RefreshCw size={20} className="text-white" />
@@ -232,7 +397,7 @@ export default function Upload() {
 
                   {/* 4. Speed */}
                   <button 
-                    className="absolute top-[21%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
+                    className="absolute top-[26%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
                     onClick={() => alert('Speed')}
                   >
                     <span className="text-white font-bold text-xs">1x</span>
@@ -240,7 +405,7 @@ export default function Upload() {
 
                   {/* 5. Beauty */}
                   <button 
-                    className="absolute top-[29%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
+                    className="absolute top-[34%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
                     onClick={() => alert('Beauty')}
                   >
                     <span className="text-white text-xs">✨</span>
@@ -248,7 +413,7 @@ export default function Upload() {
 
                   {/* 6. Timer */}
                   <button 
-                    className="absolute top-[37%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
+                    className="absolute top-[42%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
                     onClick={() => alert('Timer')}
                   >
                     <Clock size={20} className="text-white" />
@@ -256,7 +421,7 @@ export default function Upload() {
 
                   {/* 7. Flash */}
                   <button 
-                    className="absolute top-[45%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
+                    className="absolute top-[50%] right-[5%] w-8 h-8 flex items-center justify-center opacity-0 hover:opacity-100 hover:bg-white/10 rounded-full"
                     onClick={() => alert('Flash')}
                   >
                     <Zap size={20} className="text-white" />
@@ -272,13 +437,31 @@ export default function Upload() {
                     Ef
                   </button>
 
-                  {/* 9. Record Button (Invisible) */}
-                  <button 
-                    className={`absolute bottom-[10.5%] left-1/2 -translate-x-1/2 w-24 h-24 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-red-600 border-4 border-white' : 'opacity-0 hover:bg-white/10'}`}
-                    onClick={toggleRecording}
-                  >
-                    {isRecording && <div className="w-8 h-8 bg-white rounded-sm" />}
-                  </button>
+                  {/* 9. Record Button (Play / Stop Logic) */}
+                  <div className="absolute bottom-[10.5%] left-1/2 -translate-x-1/2 flex items-center gap-4">
+                      {/* Done Button (Visible only if we have chunks and are paused or recording) */}
+                      {(chunks.length > 0 || isPaused) && (
+                          <button 
+                            className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white border-2 border-white animate-in fade-in zoom-in duration-300 absolute -right-20"
+                            onClick={stopRecordingFinal}
+                          >
+                              <Check size={24} />
+                          </button>
+                      )}
+
+                      <button 
+                        className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${isRecording ? 'bg-red-600 border-4 border-white' : 'bg-white/20 border-4 border-white hover:bg-red-600/50'}`}
+                        onClick={toggleRecording}
+                      >
+                        {isRecording ? (
+                            <Square className="text-white fill-white w-8 h-8" />
+                        ) : (
+                            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                                {/* Inner Circle */}
+                            </div>
+                        )}
+                      </button>
+                  </div>
 
                   {/* 11. Go Live Hitbox (Right Side - Invisible) */}
                   <button 
@@ -301,6 +484,49 @@ export default function Upload() {
                     <span className="sr-only">Upload</span>
                   </button>
               </div>
+
+              {/* Music Selection Modal */}
+              {showMusicModal && (
+                  <div className="absolute inset-0 z-[200] bg-black/90 flex flex-col pt-10 px-4 animate-in slide-in-from-bottom duration-300">
+                      <div className="flex items-center justify-between mb-6">
+                          <h2 className="text-white text-xl font-bold">Select Sound</h2>
+                          <button 
+                            onClick={() => setShowMusicModal(false)}
+                            className="text-white p-2"
+                          >
+                              X
+                          </button>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto space-y-2 pb-10">
+                          {musicTracks.map((track) => (
+                              <div 
+                                key={track.id}
+                                className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer border border-white/5"
+                                onClick={() => handleSelectMusic(track)}
+                              >
+                                  <div className="flex items-center gap-3">
+                                      <button 
+                                        className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-500 rounded flex items-center justify-center hover:scale-105 transition-transform"
+                                        onClick={(e) => togglePreview(e, track)}
+                                      >
+                                          {playingTrackId === track.id ? (
+                                              <Square size={16} className="text-white fill-white" />
+                                          ) : (
+                                              <Play size={16} className="text-white fill-white" />
+                                          )}
+                                      </button>
+                                      <div>
+                                          <h3 className="text-white font-bold text-sm">{track.title}</h3>
+                                          <p className="text-white/60 text-xs">{track.artist} • {track.duration}</p>
+                                      </div>
+                                  </div>
+                                  {selectedSong === track.title && <Check className="text-green-400" size={20} />}
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              )}
           </div>
         </>
       )}

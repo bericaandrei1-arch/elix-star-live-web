@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { getLevelBadge } from '../utils/levelBadges';
+import { cn } from '../lib/utils';
+import { LevelBadge } from './LevelBadge';
 
 interface Message {
   id: string;
@@ -12,9 +13,11 @@ interface Message {
 
 interface ChatOverlayProps {
   messages: Message[];
+  variant?: 'panel' | 'overlay';
+  className?: string;
 }
 
-export function ChatOverlay({ messages }: ChatOverlayProps) {
+export function ChatOverlay({ messages, variant = 'panel', className }: ChatOverlayProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
@@ -23,34 +26,36 @@ export function ChatOverlay({ messages }: ChatOverlayProps) {
   }, [messages]);
 
   return (
-    // Fundal negru fix pentru toata zona de chat (Complet Negru / Dark Black) - Micsorat la jumatate (20vh)
-    <div className="absolute bottom-[80px] left-0 w-full h-[25vh] bg-black z-[40] flex flex-col p-4 border-t border-white/10">
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 pr-2">
+    <div
+      className={cn(
+        "flex flex-col z-[40]",
+        variant === 'overlay'
+          ? "absolute bottom-0 left-0 w-full h-[calc(26vh+80px)] bg-transparent p-3 pb-[calc(96px+env(safe-area-inset-bottom))]"
+          : "absolute bottom-0 left-0 w-full h-[calc(25vh+80px)] bg-transparent p-4 pb-[calc(96px+env(safe-area-inset-bottom))]",
+        className
+      )}
+    >
+      <div className={cn("flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2", variant === 'panel' && "pr-2")}>
         {messages.map((msg) => (
-          <div key={msg.id} className="flex items-start text-[13px] leading-snug">
+          <div
+            key={msg.id}
+            className={cn(
+              "flex items-start text-[13px] leading-snug",
+              variant === 'overlay' && "px-1"
+            )}
+          >
             <div className="inline-block max-w-full">
               <div className="flex flex-col gap-0.5">
-                {/* Name Row with Badge Image */}
+                {/* Name Row with Badge Image (DISABLED) */}
                 <div className="flex items-center gap-1.5">
-                  {!msg.isSystem && (
-                      <div className="w-[65px] h-[35px] flex items-center justify-center shrink-0 relative">
-                          <img 
-                              src={getLevelBadge(msg.level || 1)} 
-                              alt=""
-                              className="w-full h-full object-contain"
-                          />
-                          <span className="absolute inset-0 flex items-center justify-center text-yellow-300 text-[14px] font-black italic pt-1 pl-4 drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]">
-                            {msg.level || 1}
-                          </span>
-                      </div>
-                   )}
+                  {!msg.isSystem && <LevelBadge level={msg.level || 1} size={28} className="-ml-1" />}
                   <span className="font-bold text-gray-500 text-xs mt-1">
                     {msg.username}:
                   </span>
                 </div>
                 
                 {/* Message Text */}
-                <span className={`font-medium ${msg.isGift ? 'text-secondary font-bold' : 'text-white font-semibold'} pl-1`}>
+                <span className={cn("font-medium", msg.isGift ? "text-secondary font-bold" : "text-white font-semibold", variant === 'panel' && "pl-1")}>
                   {msg.text}
                 </span>
               </div>

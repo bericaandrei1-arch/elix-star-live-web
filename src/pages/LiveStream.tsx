@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Gift, X, Send, UserPlus, ArrowLeft } from 'lucide-react';
+import { X, Send, UserPlus, ArrowLeft } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GiftPanel, GIFTS } from '../components/GiftPanel';
 import { GiftOverlay } from '../components/GiftOverlay';
 import { ChatOverlay } from '../components/ChatOverlay';
 import { useAuthStore } from '../store/useAuthStore';
-import { getLevelBadge } from '../utils/levelBadges';
+import { LevelBadge } from '../components/LevelBadge';
 
 // Mock messages for simulation
 const MOCK_MESSAGES = [
@@ -286,54 +286,94 @@ export default function LiveStream() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="relative w-full h-[100dvh] md:w-[450px] md:h-[90vh] md:max-h-[850px] md:rounded-3xl bg-black overflow-hidden shadow-2xl border border-white/10">
+      {/* Solid Black Background for the whole container */}
+      <div className="absolute inset-0 bg-black pointer-events-none z-0" />
+
       {/* Live Video Placeholder or Camera Feed */}
-      <div className={`relative w-full h-full ${isBattleMode ? 'flex mt-[120px] h-[40%]' : ''}`}>
-        
-        {/* Battle Score Bar */}
-        {isBattleMode && (
-            <div className="absolute -top-[100px] left-0 right-0 z-50 flex flex-col items-center px-2">
-                {/* Timer */}
-                <div className="bg-black/50 text-white font-bold px-3 py-1 rounded-full mb-2 border border-white/20 text-sm">
-                    {formatTime(battleTime)}
-                </div>
-                
-                {/* PK Bar */}
-                <div className="w-full h-8 bg-gray-800 rounded-full overflow-hidden flex relative border-2 border-white/20 shadow-lg">
-                    {/* Left (Me) - Red */}
-                    <div 
-                        className="h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-300 flex items-center justify-start pl-2"
-                        style={{ width: `${(myScore / (myScore + opponentScore || 1)) * 100}%` }}
-                    >
-                        <span className="text-white font-black text-xs drop-shadow-md">{myScore}</span>
-                    </div>
-                    
-                    {/* VS Logo Center */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full flex items-center justify-center border-2 border-white shadow-xl scale-110">
-                        <span className="text-white font-black italic text-xs">VS</span>
-                    </div>
-
-                    {/* Right (Opponent) - Blue */}
-                    <div className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-end pr-2">
-                        <span className="text-white font-black text-xs drop-shadow-md">{opponentScore}</span>
-                    </div>
-                </div>
-                
-                {/* Result */}
-                {battleWinner && (
-                    <div className="absolute top-20 z-50 animate-bounce">
-                        <img 
-                            src={battleWinner === 'me' ? "https://cdn-icons-png.flaticon.com/512/744/744922.png" : "https://cdn-icons-png.flaticon.com/512/10701/10701484.png"} 
-                            alt="Result" 
-                            className="w-32 h-32 drop-shadow-2xl"
-                        />
-                    </div>
+      <div className="relative w-full h-full">
+        {isBattleMode ? (
+          <div className="relative w-full h-full flex flex-col bg-black">
+            {/* Split Video Section (Top 55% + Margin) */}
+            <div className="relative w-full h-[55%] mt-[80px] flex border-b border-white/10">
+              <div className="w-1/2 h-full overflow-hidden relative border-r border-black/50 bg-black">
+                {isBroadcast ? (
+                  <video
+                    ref={videoRef}
+                    className="w-full h-full object-cover transform scale-x-[-1]"
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                ) : (
+                  <video
+                    src="/gifts/Lightning Hypercar.mp4"
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    onError={(e) => {
+                      console.warn("Video failed to load, falling back to black");
+                      e.currentTarget.style.display = 'block';
+                      e.currentTarget.parentElement?.classList.add('bg-black');
+                    }}
+                  />
                 )}
-            </div>
-        )}
+              </div>
 
-        {/* MY STREAM (Left Side in Battle) */}
-        <div className={`${isBattleMode ? 'w-1/2 border-r-2 border-black/50 overflow-hidden relative' : 'w-full h-full'}`}>
-          {isBroadcast ? (
+              <div className="w-1/2 h-full bg-gray-900 relative overflow-hidden">
+                <video
+                  src="/gifts/Falcon King Delivery.mp4"
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              </div>
+
+              <div className="absolute -top-8 left-0 w-full py-2 z-50 pointer-events-none">
+                <div className="w-full relative">
+                  <img
+                    src="/Icons/Battles%20top%20bar.png"
+                    alt="Live Battle Layout"
+                    className="w-full h-16 object-contain"
+                  />
+
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 text-white font-bold px-3 py-1 rounded-full border border-white/20 text-xs">
+                    {formatTime(battleTime)}
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-between px-8">
+                    <span className="text-white font-black text-sm drop-shadow-md">{myScore}</span>
+                    <span className="text-white font-black text-sm drop-shadow-md">{opponentScore}</span>
+                  </div>
+
+                  {battleWinner && (
+                    <div className="absolute top-[72px] left-1/2 -translate-x-1/2 z-50 animate-bounce">
+                      <img
+                        src={battleWinner === 'me' ? "https://cdn-icons-png.flaticon.com/512/744/744922.png" : "https://cdn-icons-png.flaticon.com/512/10701/10701484.png"}
+                        alt="Result"
+                        className="w-28 h-28 drop-shadow-2xl"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Section (Bottom) */}
+            <div className="flex-1 bg-black overflow-hidden relative border-t border-white/10">
+              <ChatOverlay
+                messages={messages}
+                variant="panel"
+                className="static w-full h-full bg-black border-0 p-4"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative w-full h-full">
+            {isBroadcast ? (
               <video
                 ref={videoRef}
                 className="w-full h-full object-cover transform scale-x-[-1]"
@@ -341,43 +381,25 @@ export default function LiveStream() {
                 playsInline
                 muted
               />
-          ) : (
+            ) : (
               <video
-                src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                src="/gifts/Blue Flame Racer.mp4"
                 className="w-full h-full object-cover"
                 autoPlay
                 loop
                 muted
                 playsInline
                 onError={(e) => {
-                    console.warn("Video failed to load, falling back to gradient");
-                    e.currentTarget.style.display = 'block'; 
-                    e.currentTarget.parentElement?.classList.add('bg-gradient-to-br', 'from-purple-900', 'to-black');
+                  console.warn("Video failed to load, falling back to black");
+                  e.currentTarget.style.display = 'block';
+                  e.currentTarget.parentElement?.classList.add('bg-black');
                 }}
               />
-          )}
-          {isBattleMode && <div className="absolute bottom-2 left-2 text-white font-bold text-xs bg-red-500 px-2 rounded-full">ME</div>}
-        </div>
-
-        {/* OPPONENT STREAM (Right Side in Battle) */}
-        {isBattleMode && (
-            <div className="w-1/2 h-full bg-gray-900 relative overflow-hidden">
-                <video 
-                    src="https://cdn.pixabay.com/video/2023/10/19/185714-876123049_large.mp4"
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                />
-                <div className="absolute bottom-2 right-2 text-white font-bold text-xs bg-blue-500 px-2 rounded-full">Rival</div>
-            </div>
+            )}
+          </div>
         )}
       </div>
       
-      {/* Dark Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
-
       {/* Header Info */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
         <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full p-1 pr-4">
@@ -429,16 +451,7 @@ export default function LiveStream() {
                 <div className="bg-gradient-to-r from-purple-900/90 via-black/90 to-purple-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-secondary/50 shadow-[0_0_15px_rgba(230,199,122,0.3)] flex items-center gap-2">
                     <span className="text-secondary font-bold text-xs uppercase tracking-widest">Global Broadcast:</span>
                     <div className="flex items-center gap-1 mx-1">
-                        <div className="relative w-6 h-3 flex items-center justify-center">
-                            <img 
-                                src={getLevelBadge(userLevel)}
-                                alt="Lv" 
-                                className="absolute inset-0 w-full h-full object-contain" 
-                            />
-                            <span className="relative z-10 text-[5px] font-black text-white italic drop-shadow-sm pl-2 pt-0.5">
-                                {userLevel}
-                            </span>
-                        </div>
+                        <LevelBadge level={userLevel} size={32} />
                         <span className="text-secondary font-bold text-xs">Andrei Ionut Berica</span>
                     </div>
                     <span className="text-white text-xs font-medium">
@@ -451,11 +464,11 @@ export default function LiveStream() {
       </AnimatePresence>
 
       {/* Chat Area */}
-      <ChatOverlay messages={messages} />
+      {!isBattleMode && <ChatOverlay messages={messages} />}
 
       {/* Combo Button Overlay */}
       <AnimatePresence>
-        {showComboButton && lastSentGift && (
+        {!isBattleMode && showComboButton && lastSentGift && (
             <motion.div 
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -494,6 +507,7 @@ export default function LiveStream() {
         )}
         
         {/* Debug: Simulate Incoming Gift */}
+        {!isBattleMode && (
         <button 
             onClick={simulateIncomingGift}
             className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center text-xs text-white border border-white/20"
@@ -501,13 +515,14 @@ export default function LiveStream() {
         >
             🧪
         </button>
+        )}
 
         {/* Gift Button - Visible for everyone for testing */}
         <button 
             onClick={() => setShowGiftPanel(true)}
-            className="w-10 h-10 bg-gradient-to-tr from-primary to-secondary rounded-full flex items-center justify-center text-white shadow-lg animate-pulse"
+            className="w-10 h-10 bg-black/70 rounded-full flex items-center justify-center text-white shadow-lg border border-white/20 hover:bg-black/80 transition"
         >
-            <Gift size={20} />
+            <img src="/Icons/Gift%20icon.png?v=3" alt="Gift" className="w-5 h-5 object-contain" />
         </button>
       </div>
 

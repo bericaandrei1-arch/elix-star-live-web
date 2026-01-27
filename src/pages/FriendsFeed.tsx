@@ -3,17 +3,18 @@ import { ArrowLeft, UserPlus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const FRIENDS_VIDEOS = [
-  { id: 1, url: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4', user: 'bestie_jen', caption: 'Friday vibes! 🎉' },
-  { id: 2, url: 'https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4', user: 'mark_travels', caption: 'Nature walk 🌳' },
+  { id: 1, url: '/gifts/Elix Royal Golden Lion.mp4', user: 'bestie_jen', caption: 'Friday vibes! 🎉' },
+  { id: 2, url: '/gifts/Eternal Guardian Chest (Phoenix + Wolf + Owl).mp4', user: 'mark_travels', caption: 'Nature walk 🌳' },
 ];
 
 export default function FriendsFeed() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10">
+    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+      <div className="w-full max-w-[500px]">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-1">
             <ArrowLeft size={24} />
@@ -55,6 +56,7 @@ export default function FriendsFeed() {
           <p>Connect with your contacts to see their videos here.</p>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -24,9 +24,10 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-2 border-b border-white/10">
+    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+      <div className="w-full max-w-[500px]">
+        {/* Header */}
+        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center gap-2 border-b border-white/10">
         <button onClick={() => navigate(-1)} className="p-1">
           <ArrowLeft size={24} />
         </button>
@@ -67,6 +68,7 @@ export default function SearchPage() {
             </button>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

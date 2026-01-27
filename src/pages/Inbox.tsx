@@ -14,7 +14,8 @@ export default function Inbox() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24 pt-4 px-4">
+    <div className="min-h-screen bg-black text-white pb-24 pt-4 px-4 flex justify-center">
+      <div className="w-full max-w-[500px]">
         <header className="flex justify-center items-center mb-6 relative">
             <h1 className="text-lg font-bold">Inbox</h1>
             <button className="absolute right-0">
@@ -75,6 +76,7 @@ export default function Inbox() {
                 ))}
              </div>
         </section>
+      </div>
     </div>
   );
 }

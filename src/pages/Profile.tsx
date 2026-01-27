@@ -2,22 +2,24 @@ import React from 'react';
 import { Settings, Share2, Menu, Lock, Play, Heart, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LevelBadge } from '../components/LevelBadge';
+import { useAuthStore } from '../store/useAuthStore';
 
 export default function Profile() {
   const navigate = useNavigate();
-  // Mock User Level for Profile View
-  const userLevel = 12; // Example level
+  const { user } = useAuthStore();
+  const displayName = user?.name ?? 'User';
+  const displayUsername = user?.username ?? 'user';
+  const displayAvatar = user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
+  const level = user?.level ?? 1;
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24 pt-4">
+    <div className="min-h-screen bg-black text-white pb-24 pt-4 flex justify-center">
+      <div className="w-full max-w-[500px]">
         <header className="flex justify-between items-center px-4 mb-6">
             <div className="w-6"></div> {/* Spacer */}
             <h1 className="font-bold text-lg flex items-center gap-2">
-                Andrei Ionut Berica 
-                {/* Level Badge in Header */}
-                <div className="flex items-center justify-center">
-                    <LevelBadge level={userLevel} size={40} />
-                </div>
+                {displayName}
+                <LevelBadge level={level} size={34} />
             </h1>
             <div className="flex space-x-4">
                 <EyeOff size={24} />
@@ -27,14 +29,12 @@ export default function Profile() {
 
         <div className="flex flex-col items-center mb-6">
             <div className="w-24 h-24 bg-gray-700 rounded-full mb-3 border-2 border-secondary/50 relative p-1">
-                 <img src="https://ui-avatars.com/api/?name=Andrei+Ionut+Berica&background=random" alt="Profile" className="w-full h-full rounded-full object-cover" />
-                 
-                 {/* Level Badge Overlay on Avatar */}
-                 <div className="absolute -bottom-2 -right-2 flex items-center justify-center drop-shadow-lg">
-                    <LevelBadge level={userLevel} size={48} />
+                 <img src={displayAvatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+                   <LevelBadge level={level} size={44} />
                  </div>
             </div>
-            <h2 className="text-xl font-bold mt-2">@andrei_berica</h2>
+            <h2 className="text-xl font-bold mt-2">@{displayUsername}</h2>
             
             <div className="flex space-x-8 mt-4">
                 <div className="flex flex-col items-center">
@@ -98,6 +98,7 @@ export default function Profile() {
                  </div>
              ))}
         </div>
+      </div>
     </div>
   );
 }

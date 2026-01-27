@@ -6,7 +6,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
-import Empty from './components/Empty';
+// import Empty from './components/Empty';
 import { BottomNav } from './components/BottomNav';
 import { useAuthStore } from './store/useAuthStore';
 import { cn } from './lib/utils';
@@ -19,6 +19,7 @@ import Inbox from './pages/Inbox';
 import FriendsFeed from './pages/FriendsFeed';
 import EditProfile from './pages/EditProfile';
 import Settings from './pages/Settings';
+import RequireAuth from './components/RequireAuth';
 
 function App() {
   const { checkUser } = useAuthStore();
@@ -40,15 +41,18 @@ function App() {
           <Route path="/live/:streamId" element={<LiveStream />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:userId" element={<Profile />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/upload" element={<Upload />} />
           <Route path="/friends" element={<FriendsFeed />} />
-          <Route path="/inbox" element={<Inbox />} />
           <Route path="/saved" element={<SavedVideos />} />
           <Route path="/music/:songId" element={<MusicFeed />} />
+
+          <Route element={<RequireAuth />}>
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Routes>
       </main>
       <BottomNav />
