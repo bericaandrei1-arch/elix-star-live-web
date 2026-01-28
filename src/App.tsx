@@ -21,6 +21,7 @@ import Inbox from './pages/Inbox';
 import FriendsFeed from './pages/FriendsFeed';
 import EditProfile from './pages/EditProfile';
 import Settings from './pages/Settings';
+import CreatorLoginDetails from './pages/CreatorLoginDetails';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
           <Route path="/saved" element={<SavedVideos />} />
           <Route path="/music/:songId" element={<MusicFeed />} />
           <Route path="/create" element={<Create />} />
+          <Route path="/creator/login-details" element={<CreatorLoginDetails />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Gift, Coins } from 'lucide-react';
 
 const giftsBase = import.meta.env.VITE_GIFT_ASSET_BASE_URL as string | undefined;
@@ -37,12 +37,49 @@ export const GIFTS = [
   { id: '24', name: 'Guardian Vault', coins: 18000, icon: giftUrl('/gifts/Mythic Guardian Vault.mp4'), video: giftUrl('/gifts/Mythic Guardian Vault.mp4'), preview: giftUrl('/gifts/Mythic Guardian Vault.mp4') },
 ];
 
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(url);
+}
+
+function GiftPreview({ src, poster, active }: { src: string; poster?: string; active: boolean }) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (!active) {
+      el.pause();
+      return;
+    }
+
+    el.play().catch(() => {});
+  }, [active]);
+
+  return (
+    <div className="w-8 h-8 overflow-hidden rounded-md bg-black/40">
+      <video
+        ref={ref}
+        src={active ? src : undefined}
+        poster={poster}
+        className="w-full h-full object-cover pointer-events-none"
+        muted
+        loop
+        playsInline
+        preload="none"
+      />
+    </div>
+  );
+}
+
 interface GiftPanelProps {
   onSelectGift: (gift: typeof GIFTS[0]) => void;
   userCoins: number;
 }
 
 export function GiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
+  const [activeGiftId, setActiveGiftId] = useState<string | null>(null);
+
   return (
     <div className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[34vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
       <div className="flex justify-between items-center mb-1">
@@ -63,20 +100,21 @@ export function GiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
         {GIFTS.map((gift) => (
           <button
             key={gift.id}
-            onClick={() => onSelectGift(gift)}
+            onMouseEnter={() => setActiveGiftId(gift.id)}
+            onMouseLeave={() => setActiveGiftId((v) => (v === gift.id ? null : v))}
+            onFocus={() => setActiveGiftId(gift.id)}
+            onBlur={() => setActiveGiftId((v) => (v === gift.id ? null : v))}
+            onClick={() => {
+              setActiveGiftId(gift.id);
+              onSelectGift(gift);
+            }}
             className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-transparent hover:border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
           >
-            <div className="w-8 h-8 overflow-hidden">
-              <video
-                src={gift.video}
-                className="w-full h-full object-cover pointer-events-none"
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                autoPlay
-              />
-            </div>
+            <GiftPreview
+              src={gift.video}
+              poster={isImageUrl(gift.icon) ? gift.icon : undefined}
+              active={activeGiftId === gift.id}
+            />
             <div className="text-center z-10">
               <p className="text-[9px] text-white/90 font-medium truncate w-12 mb-0.5 group-hover:text-white">{gift.name}</p>
               <div className="flex items-center justify-center gap-1">

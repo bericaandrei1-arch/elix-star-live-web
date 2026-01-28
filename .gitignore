@@ -15,10 +15,6 @@ dist-ssr
 .env.*
 !.env.example
 
-# Large local media (do not commit)
-public/gifts/**/*.mp4
-public/gifts/**/*.webm
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

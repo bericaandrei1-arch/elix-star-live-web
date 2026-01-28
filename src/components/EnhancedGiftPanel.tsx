@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Gift, Coins } from 'lucide-react';
 
 import { GIFTS as BASE_GIFTS } from './GiftPanel';
@@ -12,8 +12,36 @@ interface GiftPanelProps {
 
 type GiftCategory = 'all' | 'popular' | 'new' | 'exclusive';
 
-const GiftVideo: React.FC<{ src: string }> = ({ src }) => {
+function useInView<T extends Element>(options?: IntersectionObserverInit) {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) {
+      setInView(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setInView(entry.isIntersecting);
+    }, options);
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [options]);
+
+  return { ref, inView };
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(url);
+}
+
+const GiftVideo: React.FC<{ src: string; poster?: string; active: boolean }> = ({ src, poster, active }) => {
   const [failed, setFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   if (failed) {
     return (
@@ -23,15 +51,28 @@ const GiftVideo: React.FC<{ src: string }> = ({ src }) => {
     );
   }
 
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    if (!active) {
+      el.pause();
+      return;
+    }
+
+    el.play().catch(() => {});
+  }, [active]);
+
   return (
     <video
-      src={src}
+      ref={videoRef}
+      src={active ? src : undefined}
+      poster={poster}
       className="w-full h-full object-cover pointer-events-none"
       muted
       loop
       playsInline
-      preload="metadata"
-      autoPlay
+      preload="none"
       onError={() => setFailed(true)}
     />
   );
@@ -40,6 +81,8 @@ const GiftVideo: React.FC<{ src: string }> = ({ src }) => {
 export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
   const [selectedCategory, setSelectedCategory] = useState<GiftCategory>('all');
   const lastTapRef = useRef<{ id: string; ts: number } | null>(null);
+  const [activeGiftId, setActiveGiftId] = useState<string | null>(null);
+  const { ref: panelRef, inView } = useInView<HTMLDivElement>({ root: null, threshold: 0.05 });
 
   const categories = [
     { id: 'all', name: 'All', icon: '🎁' },
@@ -57,8 +100,16 @@ export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
       ? GIFTS.slice(-5)
       : GIFTS.filter((g) => g.coins > 15000);
 
+  const posterByGiftId = useMemo(() => {
+    const map = new Map<string, string | undefined>();
+    for (const g of filteredGifts) {
+      map.set(g.id, isImageUrl(g.icon) ? g.icon : undefined);
+    }
+    return map;
+  }, [filteredGifts]);
+
   return (
-    <div className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[36vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
+    <div ref={panelRef} className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[36vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
       {/* Header with Categories */}
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-secondary font-bold text-base flex items-center gap-2">
@@ -100,6 +151,7 @@ export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
             onClick={() => {
               const now = Date.now();
               const last = lastTapRef.current;
+              setActiveGiftId(gift.id);
               onSelectGift(gift);
               if (last && last.id === gift.id && now - last.ts <= 350) {
                 onSelectGift(gift);
@@ -108,10 +160,12 @@ export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
               }
               lastTapRef.current = { id: gift.id, ts: now };
             }}
+            onMouseEnter={() => setActiveGiftId(gift.id)}
+            onMouseLeave={() => setActiveGiftId((v) => (v === gift.id ? null : v))}
             className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-transparent hover:border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
           >
             <div className="w-12 h-12 flex items-center justify-center text-3xl bg-gradient-to-br from-black/40 to-black/10 rounded-full shadow-inner group-hover:shadow-secondary/20 transition-all overflow-hidden relative">
-              <GiftVideo src={gift.video} />
+              <GiftVideo src={gift.video} poster={posterByGiftId.get(gift.id)} active={inView && activeGiftId === gift.id} />
               <div className="absolute inset-0 bg-black/20 pointer-events-none" />
             </div>
             <div className="text-center z-10">

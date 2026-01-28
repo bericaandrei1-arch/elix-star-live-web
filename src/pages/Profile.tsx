@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Share2, Menu, Lock, Play, Heart, EyeOff, Camera } from 'lucide-react';
+import { Share2, Menu, Lock, Play, Heart, EyeOff, Camera, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LevelBadge } from '../components/LevelBadge';
 import { useAuthStore } from '../store/useAuthStore';
@@ -106,6 +106,24 @@ export default function Profile() {
         <div className="px-4 text-center mb-6 text-sm">
             <p>Welcome to my profile! 🎥</p>
             <p className="text-blue-400">linktr.ee/username</p>
+        </div>
+
+        <div className="px-4 mb-6">
+          <button
+            onClick={() => navigate('/creator/login-details')}
+            className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#E6B36A]/15 border border-[#E6B36A]/25 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[#E6B36A]" />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-semibold">Creator login details</div>
+                <div className="text-xs text-white/60">Create account, sign in, and save details</div>
+              </div>
+            </div>
+            <div className="text-xs text-[#E6B36A] font-semibold">Open</div>
+          </button>
         </div>
 
         {/* Tabs */}
