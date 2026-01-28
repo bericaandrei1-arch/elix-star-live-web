@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, User, Lock, Shield, CircleHelp, LogOut } from 'lucide-react';
+import { ArrowLeft, FileText, Lock, Copyright, CircleHelp, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -8,10 +8,10 @@ export default function Settings() {
   const { signOut } = useAuthStore();
 
   const items = [
-      { icon: User, label: 'Account' },
-      { icon: Lock, label: 'Privacy' },
-      { icon: Shield, label: 'Security & Permissions' },
-      { icon: CircleHelp, label: 'Report a problem' },
+    { icon: FileText, label: 'Terms of Service', to: '/terms' },
+    { icon: Lock, label: 'Privacy Policy', to: '/privacy' },
+    { icon: Copyright, label: 'Copyright & Audio Policy', to: '/copyright' },
+    { icon: CircleHelp, label: 'Report a problem', to: '/inbox' },
   ];
 
   return (
@@ -24,11 +24,16 @@ export default function Settings() {
         </header>
 
         <div className="space-y-1">
-            {items.map((item, idx) => (
-                <div key={idx} className="flex items-center p-4 hover:bg-gray-900 cursor-pointer">
-                    <item.icon size={20} className="mr-4 text-gray-400" />
-                    <span className="text-base">{item.label}</span>
-                </div>
+            {items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className="w-full flex items-center p-4 hover:bg-gray-900 cursor-pointer text-left"
+                onClick={() => navigate(item.to)}
+              >
+                <item.icon size={20} className="mr-4 text-gray-400" />
+                <span className="text-base">{item.label}</span>
+              </button>
             ))}
         </div>
 

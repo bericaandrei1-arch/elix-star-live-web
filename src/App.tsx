@@ -23,6 +23,9 @@ import EditProfile from './pages/EditProfile';
 import Settings from './pages/Settings';
 import CreatorLoginDetails from './pages/CreatorLoginDetails';
 import AuthCallback from './pages/AuthCallback';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Copyright from './pages/Copyright';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -59,6 +62,9 @@ function App() {
           <Route path="/create" element={<Create />} />
           <Route path="/creator/login-details" element={<CreatorLoginDetails />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/copyright" element={<Copyright />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />
