@@ -16,27 +16,25 @@ export default function MusicFeed() {
   const { songId } = useParams();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+    <div className="min-h-screen bg-black text-white flex justify-center">
       <div className="w-full max-w-[500px]">
         {/* Header Info */}
-        <div className="p-4 pt-10 flex gap-4 bg-gradient-to-b from-gray-900 to-black">
+        <div className="p-4 pt-6 bg-gradient-to-b from-gray-900 to-black">
+         <button onClick={() => navigate(-1)} className="p-2 mb-4">
+           <ArrowLeft size={24} />
+         </button>
+         <div className="flex gap-4">
          <div className="w-24 h-24 bg-gray-800 rounded-md flex items-center justify-center shrink-0">
             <Music size={40} className="text-white/50" />
          </div>
          <div className="flex-1">
-            <h1 className="text-xl font-bold mb-1">Original Sound</h1>
+            <h1 className="text-xl font-bold mb-1">Original Sound{songId ? ` #${songId}` : ''}</h1>
             <p className="text-white/60 text-sm mb-4">Trending • 1.2M Videos</p>
             <button className="bg-[#FE2C55] text-white px-6 py-1.5 rounded-sm font-semibold flex items-center gap-2 text-sm w-fit">
                <Play size={14} fill="white" /> Use this sound
             </button>
          </div>
-      </div>
-
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-2 border-b border-white/10 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2">
-          <ArrowLeft size={24} />
-        </button>
-        <span className="font-semibold">Videos using this sound</span>
+         </div>
       </div>
 
       {/* Grid */}

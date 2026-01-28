@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         primary: "#6B46C1", // Deep purple
-        secondary: "#E6C77A", // Champagne Gold (Luxury)
+        secondary: "#E6B36A", // Champagne Gold (Luxury) - FIXED COLOR
         rose: "#F4C2C2", // Rose Gold
         background: "#0B0B0B", // Soft Black (Luxury)
         surface: "#1F1F1F", // Darker surface for cards

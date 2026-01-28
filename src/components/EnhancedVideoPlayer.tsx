@@ -2,23 +2,21 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { 
   Heart, 
   Bookmark, 
-  Share2, 
   Music,
   UserPlus,
   Flag,
   Download,
   Link,
-  MessageSquare,
+  MessageCircle,
+  Share2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useVideoStore } from '../store/useVideoStore';
 import EnhancedCommentsModal from './EnhancedCommentsModal';
 import EnhancedLikesModal from './EnhancedLikesModal';
 import ShareModal from './ShareModal';
-import VideoControls from './VideoControls';
 import UserProfileModal from './UserProfileModal';
 import ReportModal from './ReportModal';
-import { GiftPanel } from './GiftPanel';
 
 interface EnhancedVideoPlayerProps {
   videoId: string;
@@ -27,6 +25,48 @@ interface EnhancedVideoPlayerProps {
   onProgress?: (progress: number) => void;
 }
 
+// Reusable Sidebar Button Component for Gold & Black Theme
+const SidebarButton = ({ 
+  onClick, 
+  isActive = false, 
+  icon: Icon, 
+  label, 
+  customContent,
+  className = ""
+}: { 
+  onClick: () => void; 
+  isActive?: boolean; 
+  icon?: React.ElementType; 
+  label?: string;
+  customContent?: React.ReactNode;
+  className?: string;
+}) => (
+  <div className={`flex flex-col items-center mr-[110px] ${className}`}>
+    <button 
+      onClick={onClick}
+      className="w-11 h-11 rounded-full flex items-center justify-center transition-transform active:scale-95 hover:bg-white/5 group"
+    >
+      {customContent ? customContent : Icon && (
+        <Icon 
+          className={`w-8 h-8 stroke-[1.5px] transition-colors ${
+            isActive 
+              ? 'text-black fill-[#E6B36A]' 
+              : 'text-[#E6B36A] fill-black/60'
+          }`} 
+        />
+      )}
+    </button>
+    {label && (
+      <span 
+        className="text-[#E6B36A] text-xs font-bold mt-1 text-shadow-sm cursor-pointer hover:underline"
+        onClick={onClick}
+      >
+        {label}
+      </span>
+    )}
+  </div>
+);
+
 export default function EnhancedVideoPlayer({ 
   videoId, 
   isActive, 
@@ -34,6 +74,7 @@ export default function EnhancedVideoPlayer({
   onProgress 
 }: EnhancedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,15 +84,11 @@ export default function EnhancedVideoPlayer({
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [quality, setQuality] = useState<'auto' | '720p' | '1080p'>('auto');
-  const [showControls, setShowControls] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [showGiftPanel, setShowGiftPanel] = useState(false);
-  const [coinBalance, setCoinBalance] = useState(999999999);
   const [isDoubleClick, setIsDoubleClick] = useState(false);
   const [showHeartAnimation, setShowHeartAnimation] = useState(false);
   
@@ -70,11 +107,15 @@ export default function EnhancedVideoPlayer({
   const togglePlay = useCallback(() => {
     if (isPlaying) {
       videoRef.current?.pause();
+      audioRef.current?.pause();
     } else {
       videoRef.current?.play().catch(() => {});
+      if (!isMuted && audioRef.current) {
+        audioRef.current.play().catch(() => {});
+      }
     }
     setIsPlaying(prev => !prev);
-  }, [isPlaying]);
+  }, [isMuted, isPlaying]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -83,6 +124,17 @@ export default function EnhancedVideoPlayer({
       setIsMuted(newMuted);
       if (!newMuted) {
         videoRef.current.volume = volume;
+      }
+    }
+
+    if (audioRef.current) {
+      const newMuted = !isMuted;
+      audioRef.current.muted = newMuted;
+      audioRef.current.volume = volume;
+      if (newMuted) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(() => {});
       }
     }
   };
@@ -97,6 +149,19 @@ export default function EnhancedVideoPlayer({
       } else if (newVolume === 0 && !isMuted) {
         setIsMuted(true);
         videoRef.current.muted = true;
+      }
+    }
+
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+      if (newVolume > 0 && isMuted) {
+        setIsMuted(false);
+        audioRef.current.muted = false;
+        audioRef.current.play().catch(() => {});
+      } else if (newVolume === 0 && !isMuted) {
+        setIsMuted(true);
+        audioRef.current.muted = true;
+        audioRef.current.pause();
       }
     }
   };
@@ -163,14 +228,32 @@ export default function EnhancedVideoPlayer({
       videoRef.current?.play().catch(() => {});
       setIsPlaying(true);
       incrementViews(videoId);
+
+      const audio = audioRef.current;
+      if (audio && video?.music?.previewUrl) {
+        if (audio.src !== video.music.previewUrl) {
+          audio.src = video.music.previewUrl;
+        }
+        audio.currentTime = 0;
+        audio.muted = isMuted;
+        audio.volume = volume;
+        if (!isMuted) {
+          audio.play().catch(() => {});
+        }
+      }
     } else {
       videoRef.current?.pause();
       setIsPlaying(false);
+      audioRef.current?.pause();
     }
-  }, [isActive, videoId, incrementViews]);
+  }, [isActive, videoId, incrementViews, isMuted, volume, video?.music?.previewUrl]);
 
   // Mouse/touch interactions
   const handleVideoClick = (e: React.MouseEvent) => {
+    if (isMuted) {
+      toggleMute();
+    }
+
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
@@ -243,12 +326,10 @@ export default function EnhancedVideoPlayer({
     <div 
       ref={containerRef}
       className="relative w-full h-screen bg-black snap-start overflow-hidden border-b border-gray-800 flex justify-center"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
-      onTouchStart={() => setShowControls(true)}
     >
       {/* Video Element */}
-      <div className="absolute top-[15vh] bottom-[20vh] w-full max-w-[500px]">
+      <div className="absolute inset-0 w-full max-w-[500px]">
+        <audio ref={audioRef} preload="auto" className="hidden" />
         <video
           ref={videoRef}
           src={video.url}
@@ -268,196 +349,116 @@ export default function EnhancedVideoPlayer({
           }}
         />
 
+        <div className="absolute top-3 left-3 right-3 h-1 rounded-full bg-white/15 overflow-hidden">
+          <div
+            className="h-full bg-[#E6B36A]"
+            style={{
+              width: `${duration > 0 ? Math.min(100, Math.max(0, (currentTime / duration) * 100)) : 0}%`,
+            }}
+          />
+        </div>
+
         {/* Heart animation for double click */}
         {showHeartAnimation && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
             <div className="animate-ping">
-              <Heart className="w-24 h-24 text-red-500 fill-current" />
+              <Heart className="w-24 h-24 text-[#E6B36A] fill-current" />
             </div>
           </div>
         )}
       </div>
 
-      {/* Video Controls Overlay */}
-      {showControls && (
-        <VideoControls
-          isPlaying={isPlaying}
-          isMuted={isMuted}
-          volume={volume}
-          currentTime={currentTime}
-          duration={duration}
-          playbackRate={playbackRate}
-          quality={quality}
-          onPlayPause={togglePlay}
-          onMuteToggle={toggleMute}
-          onVolumeChange={handleVolumeChange}
-          onSeek={handleSeek}
-          onPlaybackRateChange={handlePlaybackRateChange}
-          onQualityChange={handleQualityChange}
-          onSettingsToggle={() => setShowSettings(!showSettings)}
-        />
-      )}
-
-      {/* Settings Menu */}
-      {showSettings && (
-        <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-3 z-50">
-          <div className="space-y-2">
-            <button
-              onClick={handleReport}
-              className="flex items-center gap-2 text-white/80 hover:text-white text-sm p-2 rounded hover:bg-white/10 w-full"
-            >
-              <Flag size={16} />
-              Report
-            </button>
-            <button
-              onClick={() => {/* Download functionality */}}
-              className="flex items-center gap-2 text-white/80 hover:text-white text-sm p-2 rounded hover:bg-white/10 w-full"
-            >
-              <Download size={16} />
-              Download
-            </button>
-            <button
-              onClick={() => navigator.clipboard.writeText(window.location.href)}
-              className="flex items-center gap-2 text-white/80 hover:text-white text-sm p-2 rounded hover:bg-white/10 w-full"
-            >
-              <Link size={16} />
-              Copy Link
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Right Sidebar - Constrained to Right Edge */}
-      <div className="absolute z-[200] right-[-117px] bottom-[150px] w-[75%] md:w-[300px] h-full pointer-events-none flex flex-col justify-end">
-        <img 
-          src="/Icons/Side bar icon.png?v=2" 
-          alt="Right Sidebar Overlay" 
-          className="w-full h-full object-contain object-right-bottom"
-        />
-      </div>
+      {/* Old PNG overlay removed as per user request */}
 
       {/* Interactive Hitboxes - Aligned with the visual overlay */}
       <div className="absolute z-[201] right-[-97px] bottom-[100px] flex flex-col items-center gap-2 pb-24 pointer-events-auto">
         
         {/* Profile Avatar Area */}
-        <div 
-          className="w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-[10px] relative"
-          onClick={handleProfileClick}
-        >
-          {video.user.isVerified && (
-            <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5">
-              <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+        <div className="relative mr-[110px] mt-[10px]">
+          <div 
+            className="w-11 h-11 rounded-full cursor-pointer hover:brightness-110 relative border border-[#E6B36A]"
+            onClick={handleProfileClick}
+          >
+             <img 
+               src={video.user.avatar} 
+               alt={video.user.username} 
+               className="w-full h-full rounded-full object-cover"
+             />
+            {video.user.isVerified && (
+              <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 border border-black">
+                <div className="w-2 h-2 bg-white rounded-full flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                </div>
               </div>
-            </div>
+            )}
+          </div>
+          
+          {/* Follow Button Badge */}
+          {!video.isFollowing && (
+            <button 
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-[#E6B36A] rounded-full flex items-center justify-center hover:scale-110 transition-transform" 
+              onClick={handleFollow}
+            >
+              <UserPlus className="w-3 h-3 text-black" />
+            </button>
           )}
         </div>
 
-        {/* Follow Button */}
-        {!video.isFollowing && (
-          <button 
-            className="w-8 h-8 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-1" 
-            onClick={handleFollow}
-          >
-            <UserPlus className="w-4 h-4 text-white" />
-          </button>
-        )}
-
         {/* Like Button */}
-        <button 
-          className={`w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-[10px] flex items-center justify-center ${
-            video.isLiked ? 'bg-red-500/20' : ''
-          }`} 
+        <SidebarButton 
           onClick={handleLike}
-        >
-          <Heart 
-            className={`w-6 h-6 ${
-              video.isLiked ? 'text-red-500 fill-current' : 'text-white'
-            }`} 
-          />
-        </button>
-
-        {/* Like Count */}
-        <button 
-          className="text-white text-xs font-semibold opacity-0 hover:bg-white/10 mr-[110px] px-2 py-1 rounded"
-          onClick={() => setShowLikes(true)}
-        >
-          {formatNumber(video.stats.likes)}
-        </button>
+          isActive={video.isLiked}
+          icon={Heart}
+          label={formatNumber(video.stats.likes)}
+          className="mt-[10px]"
+        />
 
         {/* Comment Button */}
-        <button 
-          className="w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-[10px] flex items-center justify-center" 
+        <SidebarButton 
           onClick={handleComment}
-        >
-          <MessageSquare className="w-6 h-6 text-white" />
-        </button>
-
-        {/* Comment Count */}
-        <button 
-          className="text-white text-xs font-semibold opacity-0 hover:bg-white/10 mr-[110px] px-2 py-1 rounded"
-          onClick={() => setShowComments(true)}
-        >
-          {formatNumber(video.stats.comments)}
-        </button>
+          icon={MessageCircle}
+          label={formatNumber(video.stats.comments)}
+          className="mt-[5px]"
+        />
 
         {/* Save Button */}
-        <button 
-          className={`w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-[10px] flex items-center justify-center ${
-            video.isSaved ? 'bg-yellow-500/20' : ''
-          }`} 
+        <SidebarButton 
           onClick={handleSave}
-        >
-          <Bookmark 
-            className={`w-6 h-6 ${
-              video.isSaved ? 'text-yellow-500 fill-current' : 'text-white'
-            }`} 
-          />
-        </button>
-
-        <button
-          className="w-11 h-11 rounded-full cursor-pointer mr-[110px] mt-[10px] flex items-center justify-center bg-black/70 backdrop-blur-sm border border-white/20"
-          type="button"
-          title="Gift"
-          onClick={() => setShowGiftPanel(true)}
-        >
-          <img src="/Icons/Gift%20icon.png?v=3" alt="Gift" className="w-6 h-6 object-contain" />
-        </button>
+          isActive={video.isSaved}
+          icon={Bookmark}
+          className="mt-[5px]"
+        />
 
         {/* Share Button */}
-        <button 
-          className="w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mr-[110px] mt-[10px] flex items-center justify-center" 
+        <SidebarButton 
           onClick={handleShare}
-        >
-          <Share2 className="w-6 h-6 text-white" />
-        </button>
-
-        {/* Share Count */}
-        <div className="text-white text-xs font-semibold opacity-0 mr-[110px] px-2 py-1 rounded">
-          {formatNumber(video.stats.shares)}
-        </div>
+          icon={Share2}
+          label={formatNumber(video.stats.shares)}
+          className="mt-[5px]"
+        />
 
         {/* Music Disc Area */}
         <div 
-          className="w-11 h-11 rounded-full cursor-pointer opacity-0 hover:bg-white/20 mt-[20px] mr-[110px] relative"
+          className="w-11 h-11 rounded-full cursor-pointer hover:scale-110 transition-transform mt-[20px] mr-[110px] relative bg-black border border-[#E6B36A]"
           onClick={handleMusicClick}
         >
-          <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-spin" style={{ animationDuration: '8s' }} />
-          <Music className="w-5 h-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute inset-0 rounded-full border border-[#E6B36A]/30 animate-spin" style={{ animationDuration: '8s' }} />
+          <Music className="w-5 h-5 text-[#E6B36A] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
 
       {/* Bottom Info Area */}
       <div className="absolute z-[190] left-4 bottom-[120px] md:bottom-[150px] w-[70%] pb-4 pointer-events-none">
         <div className="flex items-center gap-2 mb-2">
-          <h3 className="text-white font-bold text-shadow-md">@{video.user.username}</h3>
+          <h3 className="text-[#E6B36A] font-bold text-shadow-md">@{video.user.username}</h3>
           {video.user.isVerified && (
             <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
               <div className="w-2 h-2 bg-white rounded-full" />
             </div>
           )}
-          <span className="text-white/60 text-sm">•</span>
-          <span className="text-white/60 text-sm">{formatNumber(video.user.followers)} followers</span>
+          <span className="text-[#E6B36A]/60 text-sm">•</span>
+          <span className="text-[#E6B36A]/60 text-sm">{formatNumber(video.user.followers)} followers</span>
         </div>
         
         <p className="text-white/90 text-sm mb-2 text-shadow-md line-clamp-2">
@@ -469,7 +470,7 @@ export default function EnhancedVideoPlayer({
             <button
               key={hashtag}
               onClick={() => navigate(`/hashtag/${hashtag}`)}
-              className="text-[#FE2C55] text-xs font-medium hover:underline"
+              className="text-[#E6B36A] text-xs font-medium hover:underline"
             >
               #{hashtag}
             </button>
@@ -484,7 +485,7 @@ export default function EnhancedVideoPlayer({
         )}
         
         <div className="flex items-center gap-2 text-white/90">
-          <Music size={14} />
+          <Music size={14} className="text-[#E6B36A]" />
           <span className="text-xs font-medium animate-marquee whitespace-nowrap overflow-hidden w-32">
             {video.music.title} - {video.music.artist}
           </span>
@@ -531,22 +532,6 @@ export default function EnhancedVideoPlayer({
         videoId={videoId}
         contentType="video"
       />
-
-      {showGiftPanel && (
-        <>
-          <div className="absolute inset-0 bg-black/50 z-[250]" onClick={() => setShowGiftPanel(false)} />
-          <div className="absolute bottom-0 left-0 right-0 z-[260]">
-            <GiftPanel
-              userCoins={coinBalance}
-              onSelectGift={(gift) => {
-                if (coinBalance < gift.coins) return;
-                setCoinBalance((prev) => prev - gift.coins);
-                setShowGiftPanel(false);
-              }}
-            />
-          </div>
-        </>
-      )}
     </div>
   );
 }

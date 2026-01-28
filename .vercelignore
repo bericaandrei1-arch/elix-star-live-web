@@ -1,9 +1,9 @@
-node_modules
-dist
-.git
-.vercel
-public/gifts/**/*.mp4
-public/gifts/**/*.webm
-.env
-.env.*
-
+# Exclude fișiere mari și foldere inutile
+node_modules/.cache/
+dist/
+build/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db

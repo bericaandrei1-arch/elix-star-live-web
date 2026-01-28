@@ -1,16 +1,42 @@
-import React from 'react';
-import { Settings, Share2, Menu, Lock, Play, Heart, EyeOff } from 'lucide-react';
+import React, { useState } from 'react';
+import { Share2, Menu, Lock, Play, Heart, EyeOff, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LevelBadge } from '../components/LevelBadge';
 import { useAuthStore } from '../store/useAuthStore';
+import { supabase } from '../lib/supabase';
+import { uploadAvatar } from '../lib/avatarUpload';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const displayName = user?.name ?? 'User';
   const displayUsername = user?.username ?? 'user';
   const displayAvatar = user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=random`;
   const level = user?.level ?? 1;
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const handleAvatarFile = async (file: File | undefined) => {
+    if (!file) return;
+    if (!user) {
+      setAvatarError('You must be logged in to change your avatar.');
+      return;
+    }
+
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+
+    try {
+      const publicUrl = await uploadAvatar(file, user.id);
+      const { error } = await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+      if (error) throw new Error(error.message);
+      updateUser({ avatar: publicUrl });
+    } catch (e) {
+      setAvatarError(e instanceof Error ? e.message : 'Avatar upload failed.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white pb-24 pt-4 flex justify-center">
@@ -28,12 +54,24 @@ export default function Profile() {
         </header>
 
         <div className="flex flex-col items-center mb-6">
-            <div className="w-24 h-24 bg-gray-700 rounded-full mb-3 border-2 border-secondary/50 relative p-1">
+            <div className="w-24 h-24 bg-gray-700 rounded-full mb-3 border-2 border-secondary/50 relative p-1 group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
                  <img src={displayAvatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera size={24} className="text-white" />
+                 </div>
                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
                    <LevelBadge level={level} size={44} />
                  </div>
+                 <input 
+                   type="file" 
+                   id="avatar-upload" 
+                   className="hidden" 
+                   accept="image/*"
+                   onChange={(e) => handleAvatarFile(e.target.files?.[0])} 
+                 />
             </div>
+            {isUploadingAvatar && <div className="text-xs text-white/70">Uploading...</div>}
+            {avatarError && <div className="text-xs text-rose-300 mt-1">{avatarError}</div>}
             <h2 className="text-xl font-bold mt-2">@{displayUsername}</h2>
             
             <div className="flex space-x-8 mt-4">

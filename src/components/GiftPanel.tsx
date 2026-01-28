@@ -1,7 +1,7 @@
 import React from 'react';
 import { Gift, Coins } from 'lucide-react';
 
-const giftsBase = (import.meta as any).env?.VITE_GIFT_ASSET_BASE_URL as string | undefined;
+const giftsBase = import.meta.env.VITE_GIFT_ASSET_BASE_URL as string | undefined;
 const hasRemoteGifts = !!giftsBase;
 const normalizeBase = (base: string) => base.replace(/\/+$/, '');
 const giftUrl = (path: string) => {
@@ -67,26 +67,15 @@ export function GiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
             className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-transparent hover:border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
           >
             <div className="w-8 h-8 overflow-hidden">
-              {/\.(png|jpe?g|gif|webp)$/i.test(gift.icon) ? (
-                <img src={gift.icon} alt={gift.name} className="w-full h-full object-cover" />
-              ) : (
-                <video
-                  src={gift.icon}
-                  className="w-full h-full object-cover"
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  onMouseEnter={(e) => {
-                    const video = e.currentTarget;
-                    video.play().catch(() => {});
-                  }}
-                  onMouseLeave={(e) => {
-                    const video = e.currentTarget;
-                    video.pause();
-                  }}
-                />
-              )}
+              <video
+                src={gift.video}
+                className="w-full h-full object-cover pointer-events-none"
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                autoPlay
+              />
             </div>
             <div className="text-center z-10">
               <p className="text-[9px] text-white/90 font-medium truncate w-12 mb-0.5 group-hover:text-white">{gift.name}</p>

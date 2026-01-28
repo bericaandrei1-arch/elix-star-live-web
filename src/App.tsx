@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import VideoFeed from './pages/VideoFeed';
 import LiveStream from './pages/LiveStream';
+import LiveDiscover from './pages/LiveDiscover';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
+import Create from './pages/Create';
 // import Empty from './components/Empty';
 import { BottomNav } from './components/BottomNav';
 import { useAuthStore } from './store/useAuthStore';
@@ -29,7 +31,12 @@ function App() {
     checkUser();
   }, [checkUser]);
 
-  const isFullScreen = location.pathname === '/' || location.pathname.startsWith('/live/') || location.pathname.startsWith('/music/') || location.pathname === '/following';
+  const isFullScreen =
+    location.pathname === '/' ||
+    location.pathname === '/live' ||
+    location.pathname.startsWith('/live/') ||
+    location.pathname.startsWith('/music/') ||
+    location.pathname === '/following';
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
@@ -38,6 +45,7 @@ function App() {
           <Route path="/" element={<VideoFeed />} />
           <Route path="/following" element={<FollowingFeed />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/live" element={<LiveDiscover />} />
           <Route path="/live/:streamId" element={<LiveStream />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:userId" element={<Profile />} />
@@ -46,6 +54,7 @@ function App() {
           <Route path="/friends" element={<FriendsFeed />} />
           <Route path="/saved" element={<SavedVideos />} />
           <Route path="/music/:songId" element={<MusicFeed />} />
+          <Route path="/create" element={<Create />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />

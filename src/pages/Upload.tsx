@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Zap, Clock, Music, Image as ImageIcon, Check, Trash2, Play, Square, RotateCcw } from 'lucide-react';
+import { setCachedCameraStream } from '../lib/cameraStream';
+import { RefreshCw, Zap, Clock, Music, Check, Play, Square, RotateCcw } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 
 export default function Upload() {
@@ -466,9 +467,21 @@ export default function Upload() {
                   {/* 11. Go Live Hitbox (Right Side - Invisible) */}
                   <button 
                      className="absolute bottom-[2.5%] right-[30%] w-12 h-8 flex items-center justify-center pointer-events-auto z-[100] opacity-0 hover:bg-white/10 cursor-pointer"
-                     onClick={() => {
-                         console.log("Navigating to broadcast...");
-                         navigate('/live/broadcast');
+                     onClick={async () => {
+                         try {
+                           const stream = await navigator.mediaDevices.getUserMedia({
+                             video: {
+                               width: { ideal: 1080 },
+                               height: { ideal: 1920 },
+                               facingMode: 'user',
+                             },
+                             audio: true,
+                           });
+                           setCachedCameraStream(stream);
+                           navigate('/live/broadcast');
+                         } catch {
+                           alert('Camera access denied');
+                         }
                      }}
                      title="Go Live"
                   >

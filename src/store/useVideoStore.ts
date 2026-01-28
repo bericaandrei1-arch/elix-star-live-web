@@ -31,6 +31,7 @@ interface Music {
   album?: string;
   duration: string;
   coverUrl?: string;
+  previewUrl?: string;
 }
 
 interface VideoStats {
@@ -100,36 +101,37 @@ export const useVideoStore = create<VideoStore>()(
     (set, get) => ({
       videos: [
         {
-          id: '1',
-          url: '/gifts/Blue Flame Racer.mp4',
-          thumbnail: 'https://picsum.photos/400/600?random=1',
-          duration: '0:34',
+          id: 't1',
+          url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=11',
+          duration: '0:30',
           user: {
-            id: 'user1',
-            username: 'elix_star',
-            name: 'Elix Star',
-            avatar: 'https://i.pravatar.cc/150?u=elix',
+            id: 'test1',
+            username: 'elix_music',
+            name: 'Elix Music',
+            avatar: 'https://i.pravatar.cc/150?u=elix_music',
             isVerified: true,
-            followers: 12500,
-            following: 890
+            followers: 12000,
+            following: 240
           },
-          description: 'Chasing the sunset vibes 🌅 #elix #live #sunset #vibes',
-          hashtags: ['elix', 'live', 'sunset', 'vibes'],
+          description: 'TEST: For You music preview (Song 1) #elix #music',
+          hashtags: ['elix', 'music', 'test'],
           music: {
-            id: 'music1',
-            title: 'Original Sound',
-            artist: 'Elix Star',
-            duration: '0:34'
+            id: 'song1',
+            title: 'ELIX Test Song 1',
+            artist: 'SoundHelix',
+            duration: '0:30',
+            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
           },
           stats: {
-            views: 125000,
-            likes: 1200,
-            comments: 85,
-            shares: 45,
-            saves: 230
+            views: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0
           },
-          createdAt: '2024-01-15T10:30:00Z',
-          location: 'Malibu Beach, CA',
+          createdAt: '2026-01-01T10:30:00Z',
+          location: 'For You',
           isLiked: false,
           isSaved: false,
           isFollowing: false,
@@ -138,76 +140,78 @@ export const useVideoStore = create<VideoStore>()(
           privacy: 'public'
         },
         {
-          id: '2',
-          url: '/gifts/Emerald Sky Guardian.mp4',
-          thumbnail: 'https://picsum.photos/400/600?random=2',
-          duration: '1:42',
+          id: 't2',
+          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=12',
+          duration: '0:30',
           user: {
-            id: 'user2',
-            username: 'nature_lover',
-            name: 'Nature Explorer',
-            avatar: 'https://i.pravatar.cc/150?u=bunny',
+            id: 'test2',
+            username: 'elix_beats',
+            name: 'Elix Beats',
+            avatar: 'https://i.pravatar.cc/150?u=elix_beats',
             isVerified: false,
-            followers: 5400,
-            following: 1200
+            followers: 8450,
+            following: 120
           },
-          description: 'Beautiful nature vibes 🌸 #nature #peace #forest #relax',
-          hashtags: ['nature', 'peace', 'forest', 'relax'],
+          description: 'TEST: For You music preview (Song 2) #beats #gold',
+          hashtags: ['beats', 'gold', 'test'],
           music: {
-            id: 'music2',
-            title: 'Nature Sounds',
-            artist: 'Relaxation Masters',
-            duration: '1:42'
+            id: 'song2',
+            title: 'ELIX Test Song 2',
+            artist: 'SoundHelix',
+            duration: '0:30',
+            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
           },
           stats: {
-            views: 89000,
-            likes: 5400,
-            comments: 230,
-            shares: 890,
-            saves: 1200
+            views: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0
           },
-          createdAt: '2024-01-14T15:45:00Z',
-          location: 'Redwood Forest, CA',
-          isLiked: true,
+          createdAt: '2026-01-01T10:31:00Z',
+          location: 'For You',
+          isLiked: false,
           isSaved: false,
-          isFollowing: true,
+          isFollowing: false,
           comments: [],
           quality: 'auto',
           privacy: 'public'
         },
         {
-          id: '3',
-          url: '/gifts/Falcon King Delivery.mp4',
-          thumbnail: 'https://picsum.photos/400/600?random=3',
-          duration: '0:15',
+          id: 't3',
+          url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+          thumbnail: 'https://picsum.photos/400/600?random=13',
+          duration: '0:30',
           user: {
-            id: 'user3',
-            username: 'dreamer_01',
-            name: 'Dream Catcher',
-            avatar: 'https://i.pravatar.cc/150?u=dreamer',
+            id: 'test3',
+            username: 'elix_radio',
+            name: 'Elix Radio',
+            avatar: 'https://i.pravatar.cc/150?u=elix_radio',
             isVerified: false,
-            followers: 890,
-            following: 340
+            followers: 2100,
+            following: 80
           },
-          description: 'Family time is the best time ❤️ #family #love #together',
-          hashtags: ['family', 'love', 'together'],
+          description: 'TEST: For You music preview (Song 3) #radio #elix',
+          hashtags: ['radio', 'elix', 'test'],
           music: {
-            id: 'music3',
-            title: 'Happy Moments',
-            artist: 'Family Band',
-            duration: '0:15'
+            id: 'song3',
+            title: 'ELIX Test Song 3',
+            artist: 'SoundHelix',
+            duration: '0:30',
+            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
           },
           stats: {
-            views: 45000,
-            likes: 890,
-            comments: 34,
-            shares: 12,
-            saves: 450
+            views: 0,
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            saves: 0
           },
-          createdAt: '2024-01-13T18:20:00Z',
-          location: 'Family Home',
+          createdAt: '2026-01-01T10:32:00Z',
+          location: 'For You',
           isLiked: false,
-          isSaved: true,
+          isSaved: false,
           isFollowing: false,
           comments: [],
           quality: 'auto',
@@ -215,8 +219,8 @@ export const useVideoStore = create<VideoStore>()(
         }
       ],
       likedVideos: [],
-      savedVideos: ['3'],
-      followingUsers: ['user2'],
+      savedVideos: [],
+      followingUsers: [],
 
       // Video actions
       addVideo: (video) => set((state) => ({ 

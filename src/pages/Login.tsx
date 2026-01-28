@@ -5,13 +5,14 @@ import { useAuthStore } from '../store/useAuthStore';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signInWithPassword } = useAuthStore();
+  const { signInWithPassword, loginAsGuest } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const from = (location.state as any)?.from ?? '/';
+  const state = location.state as { from?: string } | null;
+  const from = state?.from ?? '/';
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +71,17 @@ export default function Login() {
             className="w-full bg-secondary text-black font-bold rounded-xl py-2 text-sm disabled:opacity-60"
           >
             {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              loginAsGuest();
+              navigate(from, { replace: true });
+            }}
+            className="w-full bg-white/10 text-white font-bold rounded-xl py-2 text-sm hover:bg-white/20"
+          >
+            Guest Login (Demo)
           </button>
         </form>
 

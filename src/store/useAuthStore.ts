@@ -35,6 +35,7 @@ interface AuthStore {
   updateUser: (updates: Partial<User>) => void;
   getCurrentUser: () => User | null;
   checkUser: () => void;
+  loginAsGuest: () => void;
 }
 
 let authUnsubscribe: (() => void) | null = null;
@@ -129,6 +130,22 @@ export const useAuthStore = create<AuthStore>()(
         .catch(() => {
           set({ session: null, user: null, isAuthenticated: false, isLoading: false });
         });
+    },
+
+    loginAsGuest: () => {
+      const guestUser: User = {
+        id: 'guest_123',
+        username: 'guest_user',
+        name: 'Guest User',
+        email: 'guest@example.com',
+        avatar: 'https://ui-avatars.com/api/?name=Guest+User&background=random',
+        level: 1,
+        isVerified: false,
+        followers: 0,
+        following: 0,
+        joinedDate: new Date().toISOString()
+      };
+      set({ user: guestUser, isAuthenticated: true, isLoading: false, session: null });
     }
   })
 );

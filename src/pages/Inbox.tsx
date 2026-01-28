@@ -1,10 +1,7 @@
 import React from 'react';
 import { MessageCircle, Heart, UserPlus, Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export default function Inbox() {
-  const navigate = useNavigate();
-
   const messages = [
     { id: 1, user: 'John Doe', lastMessage: 'Hey, nice video!', time: '10m', unread: true },
     { id: 2, user: 'Jane Smith', lastMessage: 'Let\'s collab', time: '2h', unread: false },

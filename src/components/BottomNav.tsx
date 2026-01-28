@@ -1,13 +1,16 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, UsersRound, Plus, MessageCircle, UserRound } from 'lucide-react';
 
 export const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide Bottom Nav on Upload/Camera page and Live Stream
   if (
     location.pathname === '/upload' ||
+    location.pathname === '/create' ||
+    location.pathname.startsWith('/create/') ||
+    location.pathname === '/live' ||
     location.pathname.startsWith('/live/') ||
     location.pathname === '/login' ||
     location.pathname === '/register'
@@ -15,39 +18,62 @@ export const BottomNav = () => {
     return null;
   }
 
-  return (
-    // Responsive container: 
-    // Mobile: 20vh height, bottom-0 (visible)
-    // Desktop (md): 350px height, -bottom-150px (partially hidden)
-    <nav className="fixed left-0 right-0 z-[300] pointer-events-none flex items-end justify-center
-                    bottom-0 h-[20vh]
-                    md:-bottom-[150px] md:h-[350px]">
-       <div className="w-full h-full relative pointer-events-none">
-          {/* Imaginea Responsive */}
-          <img 
-            src="/Icons/Home bar icon.png?v=2" 
-            alt="Navigation Bar" 
-            className="w-full h-full object-contain object-bottom" 
-          />
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
-          {/* Clickable Zones (Hitboxes) - FINAL (Invisible & Absolute) */}
-          <div className="absolute inset-0 w-full h-full pointer-events-none z-[200]">
-             {/* 1. Home - Redirects to Feed */}
-             <div onClick={() => navigate('/')} className="absolute left-[32%] bottom-[182px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Home" />
-             
-             {/* 2. Friends */}
-             <div onClick={() => navigate('/friends')} className="absolute left-[39.5%] bottom-[170px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Friends" />
-             
-             {/* 3. Upload (+) */}
-             <div onClick={() => navigate('/upload')} className="absolute left-1/2 -translate-x-1/2 bottom-[210px] w-8 h-8 md:w-14 md:h-14 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Upload" />
-             
-             {/* 4. Inbox */}
-             <div onClick={() => navigate('/inbox')} className="absolute right-[39.5%] bottom-[165px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Inbox" />
-             
-             {/* 5. Profile */}
-             <div onClick={() => navigate('/profile/me')} className="absolute right-[32%] bottom-[165px] w-6 h-6 md:w-10 md:h-10 cursor-pointer opacity-0 hover:bg-white/10 rounded-full pointer-events-auto" title="Profile" />
-          </div>
-       </div>
+  const navItems = [
+    { label: 'Home', path: '/', icon: Home },
+    { label: 'Friends', path: '/friends', icon: UsersRound },
+    { label: 'Create', path: '/create', icon: Plus, isCenter: true },
+    { label: 'Inbox', path: '/inbox', icon: MessageCircle },
+    { label: 'Profile', path: '/profile', icon: UserRound },
+  ];
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-[300] bg-black border-t border-[#E6B36A]/20 pb-safe">
+      <div className="flex items-center justify-around h-16 max-w-[500px] mx-auto px-2">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+          
+          if (item.isCenter) {
+            return (
+              <button
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                className="flex flex-col items-center justify-center -mt-4"
+              >
+                <div className="w-12 h-12 bg-[#E6B36A] rounded-xl flex items-center justify-center transform transition-transform active:scale-95 shadow-[0_0_15px_rgba(230,179,106,0.3)]">
+                  <Icon className="w-7 h-7 text-black stroke-[2px]" />
+                </div>
+              </button>
+            );
+          }
+
+          return (
+            <button
+              key={item.label}
+              onClick={() => navigate(item.path)}
+              className="flex flex-col items-center justify-center w-14 gap-1 active:scale-95 transition-transform group"
+            >
+              <Icon 
+                className={`w-6 h-6 stroke-[1.5px] transition-all duration-300 ${
+                  active 
+                    ? 'text-[#E6B36A] drop-shadow-[0_0_8px_rgba(230,179,106,0.5)]' 
+                    : 'text-[#E6B36A]/40'
+                }`} 
+              />
+              <span className={`text-[10px] font-medium transition-colors duration-300 ${
+                active ? 'text-[#E6B36A]' : 'text-[#E6B36A]/40'
+              }`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 };

@@ -11,18 +11,17 @@ export default function FriendsFeed() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20 flex justify-center">
+    <div className="min-h-screen bg-black text-white flex justify-center">
       <div className="w-full max-w-[500px]">
-        {/* Header */}
-        <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-4">
+        <div className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-1">
-            <ArrowLeft size={24} />
+              <ArrowLeft size={24} />
             </button>
             <h1 className="text-lg font-bold">Friends</h1>
+          </div>
+          <button onClick={() => navigate('/search')}><Search size={24} /></button>
         </div>
-        <button onClick={() => navigate('/search')}><Search size={24} /></button>
-      </div>
 
       {/* Content */}
       {FRIENDS_VIDEOS.length > 0 ? (
