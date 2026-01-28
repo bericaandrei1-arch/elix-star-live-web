@@ -5,11 +5,14 @@ import { useAuthStore } from '../store/useAuthStore';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signInWithPassword, loginAsGuest } = useAuthStore();
+  const { signInWithPassword, loginAsGuest, resendSignupConfirmation } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const state = location.state as { from?: string } | null;
   const from = state?.from ?? '/';
@@ -17,14 +20,19 @@ export default function Login() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setIsSubmitting(true);
     const res = await signInWithPassword(email.trim(), password);
     setIsSubmitting(false);
     if (res.error) {
       if (res.error.toLowerCase().includes('email not confirmed')) {
         setError('Email neconfirmat. Verifică inbox-ul și confirmă contul, apoi încearcă din nou.');
+        setShowResend(true);
       } else {
         setError(res.error);
+        if (/confirm|verification|verify|email/i.test(res.error)) {
+          setShowResend(true);
+        }
       }
       return;
     }
@@ -64,6 +72,37 @@ export default function Login() {
           </div>
 
           {error && <div className="text-xs text-rose-300">{error}</div>}
+          {info && <div className="text-xs text-white/70">{info}</div>}
+
+          {showResend && (
+            <button
+              type="button"
+              disabled={isResending}
+              className="w-full bg-white/10 border border-white/10 rounded-xl py-2 text-sm disabled:opacity-60"
+              onClick={async () => {
+                const trimmed = email.trim();
+                if (!trimmed) {
+                  setError('Introdu email-ul mai întâi.');
+                  return;
+                }
+                setError(null);
+                setInfo(null);
+                setIsResending(true);
+                try {
+                  const res = await resendSignupConfirmation(trimmed);
+                  if (res.error) {
+                    setError(res.error);
+                    return;
+                  }
+                  setInfo('Email de confirmare trimis din nou. Verifică Inbox și Spam.');
+                } finally {
+                  setIsResending(false);
+                }
+              }}
+            >
+              {isResending ? 'Sending...' : 'Resend confirmation email'}
+            </button>
+          )}
 
           <button
             type="submit"

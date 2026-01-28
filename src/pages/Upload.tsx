@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { setCachedCameraStream } from '../lib/cameraStream';
 import { RefreshCw, Zap, Clock, Music, Check, Play, Square, RotateCcw } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
+import { SOUND_TRACKS, type SoundTrack } from '../lib/soundLibrary';
 
 export default function Upload() {
   const navigate = useNavigate();
@@ -18,19 +19,20 @@ export default function Upload() {
   const [playingTrackId, setPlayingTrackId] = useState<number | null>(null); // Track currently playing preview
   const previewAudioRef = useRef<HTMLAudioElement | null>(null); // For list preview
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null); // For video background
+  const [customTracks, setCustomTracks] = useState<SoundTrack[]>([]);
 
   const { addVideo } = useVideoStore();
 
-  // Mock tracks with reliable MP3 URLs
-   const musicTracks = [
-     { id: 1, title: 'No Music', artist: '-', duration: '0:00', url: '' },
-     { id: 2, title: 'SoundHelix Song 1', artist: 'SoundHelix', duration: '6:12', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-     { id: 3, title: 'SoundHelix Song 8', artist: 'SoundHelix', duration: '5:25', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-     { id: 4, title: 'Enthusiast', artist: 'Tours', duration: '3:15', url: 'https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Tours/Enthusiast/Tours_-_01_-_Enthusiast.mp3' },
-     { id: 5, title: 'Moonlight', artist: 'Beethoven', duration: '5:15', url: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f7/Moonlight_Sonata_1st_Movement.ogg/Moonlight_Sonata_1st_Movement.ogg.mp3' },
-   ];
+  const formatClip = (start: number, end: number) => {
+    const total = Math.max(0, Math.floor(end - start));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
 
-   const handleSelectMusic = (track: typeof musicTracks[0]) => {
+  const musicTracks: SoundTrack[] = [...customTracks, ...SOUND_TRACKS];
+
+   const handleSelectMusic = (track: SoundTrack) => {
        setSelectedSong(track.title);
        setShowMusicModal(false);
        // Stop preview if playing
@@ -40,7 +42,7 @@ export default function Upload() {
        }
    };
  
-   const togglePreview = (e: React.MouseEvent, track: typeof musicTracks[0]) => {
+   const togglePreview = (e: React.MouseEvent, track: SoundTrack) => {
        e.stopPropagation(); // Don't select, just play
        
        if (playingTrackId === track.id) {
@@ -57,7 +59,10 @@ export default function Upload() {
            // Create new audio or reuse
            if (track.url) {
                previewAudioRef.current = new Audio(track.url);
+               const start = Math.max(0, track.clipStartSeconds);
+               const end = Math.max(start, track.clipEndSeconds);
                previewAudioRef.current.volume = 1.0;
+               previewAudioRef.current.currentTime = start;
                previewAudioRef.current.play()
                    .then(() => console.log("Audio playing:", track.title))
                    .catch(e => {
@@ -68,6 +73,15 @@ export default function Upload() {
                
                // Auto stop at end
                previewAudioRef.current.onended = () => setPlayingTrackId(null);
+               previewAudioRef.current.ontimeupdate = () => {
+                 const a = previewAudioRef.current;
+                 if (!a) return;
+                 if (end > start && a.currentTime >= end) {
+                   a.pause();
+                   a.currentTime = start;
+                   setPlayingTrackId(null);
+                 }
+               };
            } else {
                // No URL (No Music)
                setPlayingTrackId(null);
@@ -78,9 +92,9 @@ export default function Upload() {
   // Auto-select a random song on mount if none selected
    useEffect(() => {
        if (!selectedSong) {
-           // Skip index 0 (Original Sound) if you want a real song, or include it
-           const randomTrack = musicTracks[Math.floor(Math.random() * (musicTracks.length - 1)) + 1]; 
-           setSelectedSong(randomTrack.title);
+           const playable = musicTracks.filter((t) => !!t.url);
+           const randomTrack = playable[Math.floor(Math.random() * playable.length)];
+           if (randomTrack) setSelectedSong(randomTrack.title);
        }
    }, []);
 
@@ -192,8 +206,19 @@ export default function Upload() {
               
               // Start backing track
               backgroundAudioRef.current = new Audio(track.url);
-              backgroundAudioRef.current.loop = true;
+              const start = Math.max(0, track.clipStartSeconds);
+              const end = Math.max(start, track.clipEndSeconds);
+              backgroundAudioRef.current.loop = false;
               backgroundAudioRef.current.volume = 0.5; // Background volume
+              backgroundAudioRef.current.currentTime = start;
+              backgroundAudioRef.current.ontimeupdate = () => {
+                const a = backgroundAudioRef.current;
+                if (!a) return;
+                if (end > start && a.currentTime >= end) {
+                  a.currentTime = start;
+                  a.play().catch(() => {});
+                }
+              };
               backgroundAudioRef.current.play().catch(e => console.log("Auto play audio failed", e));
           }
       } else if (backgroundAudioRef.current) {
@@ -218,7 +243,7 @@ export default function Upload() {
             id: `track_${picked.id}`,
             title: picked.title,
             artist: picked.artist,
-            duration: picked.duration,
+            duration: formatClip(picked.clipStartSeconds, picked.clipEndSeconds),
             previewUrl: picked.url,
           }
         : {
@@ -514,12 +539,36 @@ export default function Upload() {
                   <div className="absolute inset-0 z-[200] bg-black/90 flex flex-col pt-10 px-4 animate-in slide-in-from-bottom duration-300">
                       <div className="flex items-center justify-between mb-6">
                           <h2 className="text-white text-xl font-bold">Select Sound</h2>
-                          <button 
-                            onClick={() => setShowMusicModal(false)}
-                            className="text-white p-2"
-                          >
-                              X
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const url = window.prompt('Paste audio URL (mp3/ogg):');
+                                if (!url) return;
+                                const title = window.prompt('Sound name:') ?? 'Custom sound';
+                                const next: SoundTrack = {
+                                  id: Date.now(),
+                                  title: title.trim() || 'Custom sound',
+                                  artist: 'You',
+                                  duration: 'custom',
+                                  url: url.trim(),
+                                  license: 'Custom (you must own rights)',
+                                  source: 'Custom URL',
+                                  clipStartSeconds: 0,
+                                  clipEndSeconds: 180,
+                                };
+                                setCustomTracks((prev) => [next, ...prev]);
+                              }}
+                              className="px-3 py-1.5 rounded-full border border-white/15 text-white/80 text-xs font-semibold hover:bg-white/10"
+                            >
+                              Add URL
+                            </button>
+                            <button 
+                              onClick={() => setShowMusicModal(false)}
+                              className="text-white p-2"
+                            >
+                                X
+                            </button>
+                          </div>
                       </div>
 
                       <div className="flex-1 overflow-y-auto space-y-2 pb-10">
@@ -542,7 +591,8 @@ export default function Upload() {
                                       </button>
                                       <div>
                                           <h3 className="text-white font-bold text-sm">{track.title}</h3>
-                                          <p className="text-white/60 text-xs">{track.artist} • {track.duration}</p>
+                                          <p className="text-white/60 text-xs">{track.artist} • {formatClip(track.clipStartSeconds, track.clipEndSeconds)}</p>
+                                          <p className="text-white/40 text-[11px]">{track.license}</p>
                                       </div>
                                   </div>
                                   {selectedSong === track.title && <Check className="text-green-400" size={20} />}

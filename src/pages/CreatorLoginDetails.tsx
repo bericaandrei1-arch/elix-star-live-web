@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 export default function CreatorLoginDetails() {
   const navigate = useNavigate();
-  const { user, signInWithPassword, signUpWithPassword, signOut } = useAuthStore();
+  const { user, signInWithPassword, signUpWithPassword, signOut, resendSignupConfirmation } = useAuthStore();
   const [rememberMe, setRememberMe] = useState(true);
   const [saveDetails, setSaveDetails] = useState(false);
   const [savedIdentifier, setSavedIdentifier] = useState('');
@@ -21,6 +21,8 @@ export default function CreatorLoginDetails() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     const storedRemember = window.localStorage.getItem('auth_remember_me');
@@ -71,7 +73,8 @@ export default function CreatorLoginDetails() {
         }
         persistSavedDetails(trimmedEmail, trimmedUsername || trimmedEmail.split('@')[0]);
         if (res.needsEmailConfirmation) {
-          setInfo('Cont creat. Verifică email-ul pentru confirmare, apoi fă login.');
+          setInfo('Cont creat. Verifică email-ul pentru confirmare. Dacă nu primești email, apasă "Resend confirmation".');
+          setShowResend(true);
           setMode('signin');
           setPassword('');
           setConfirmPassword('');
@@ -84,12 +87,36 @@ export default function CreatorLoginDetails() {
       const res = await signInWithPassword(trimmedEmail, password);
       if (res.error) {
         setError(res.error);
+        if (/confirm|verification|verify|email/i.test(res.error)) {
+          setShowResend(true);
+        }
         return;
       }
       persistSavedDetails(trimmedEmail, trimmedUsername || savedUsername || trimmedEmail.split('@')[0]);
       navigate('/profile', { replace: true });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onResend = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError('Introdu email-ul mai întâi.');
+      return;
+    }
+    setError(null);
+    setInfo(null);
+    setIsResending(true);
+    try {
+      const res = await resendSignupConfirmation(trimmedEmail);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      setInfo('Email de confirmare trimis din nou. Verifică Inbox și Spam.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -213,6 +240,17 @@ export default function CreatorLoginDetails() {
 
             {error && <div className="text-xs text-rose-300">{error}</div>}
             {info && <div className="text-xs text-white/70">{info}</div>}
+
+            {showResend && (
+              <button
+                type="button"
+                disabled={isResending}
+                className="w-full bg-white/10 border border-white/10 rounded-xl py-2 text-sm disabled:opacity-60"
+                onClick={onResend}
+              >
+                {isResending ? 'Sending...' : 'Resend confirmation email'}
+              </button>
+            )}
 
             <button
               type="submit"

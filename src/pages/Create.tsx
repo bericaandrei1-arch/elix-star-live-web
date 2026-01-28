@@ -16,15 +16,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { setCachedCameraStream } from '../lib/cameraStream';
+import { SOUND_TRACKS, type SoundTrack } from '../lib/soundLibrary';
 
 type CreateMode = 'upload' | 'post' | 'create' | 'live';
 
-type Sound = {
-  id: string;
-  title: string;
-  artist: string;
-  preview: string;
-};
+type Sound = SoundTrack;
 
 function SoundPickerModal({
   isOpen,
@@ -36,60 +32,60 @@ function SoundPickerModal({
   onPick: (sound: Sound) => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const clipRef = useRef<{ start: number; end: number } | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const sounds = useMemo<Sound[]>(
-    () => [
-      {
-        id: '1',
-        title: 'Luxury Pulse',
-        artist: 'ELIX',
-        preview: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-      },
-      {
-        id: '2',
-        title: 'Midnight Gold',
-        artist: 'ELIX',
-        preview: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-      },
-      {
-        id: '3',
-        title: 'Champagne Drift',
-        artist: 'ELIX',
-        preview: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-      },
-    ],
-    []
-  );
+  const [customSounds, setCustomSounds] = useState<Sound[]>([]);
+  const sounds = useMemo<Sound[]>(() => {
+    const builtIn = SOUND_TRACKS.filter((t) => !!t.url);
+    return [...customSounds, ...builtIn];
+  }, [customSounds]);
+
+  const formatClip = (start: number, end: number) => {
+    const total = Math.max(0, Math.floor(end - start));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    const first = sounds[0];
-    if (!first) return;
-    a.src = first.preview;
-    a.currentTime = 0;
-    a.play().then(() => setPlayingId(first.id)).catch(() => setPlayingId(null));
+    const onTimeUpdate = () => {
+      const clip = clipRef.current;
+      if (!clip) return;
+      if (clip.end > clip.start && a.currentTime >= clip.end) {
+        a.currentTime = clip.start;
+        a.play().catch(() => {});
+      }
+    };
+    a.addEventListener('timeupdate', onTimeUpdate);
     return () => {
+      a.removeEventListener('timeupdate', onTimeUpdate);
       a.pause();
     };
-  }, [sounds]);
+  }, []);
 
   const togglePreview = async (s: Sound) => {
     const a = audioRef.current;
     if (!a) return;
 
-    if (playingId === s.id) {
+    if (playingId === String(s.id)) {
       a.pause();
+      clipRef.current = null;
       setPlayingId(null);
       return;
     }
 
-    a.src = s.preview;
-    a.currentTime = 0;
+    a.src = s.url;
+    const start = Math.max(0, s.clipStartSeconds);
+    const end = Math.max(start, s.clipEndSeconds);
+    clipRef.current = { start, end };
+    a.currentTime = start;
     try {
       await a.play();
-      setPlayingId(s.id);
+      setPlayingId(String(s.id));
     } catch {
+      clipRef.current = null;
       setPlayingId(null);
     }
   };
@@ -110,9 +106,33 @@ function SoundPickerModal({
             <Music className="w-4 h-4 text-[#E6B36A]" strokeWidth={2} />
             <p className="text-white font-semibold">Add sound</p>
           </div>
-          <button onClick={onClose} className="p-2 text-[#E6B36A]">
-            <X className="w-5 h-5" strokeWidth={2} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const url = window.prompt('Paste audio URL (mp3/ogg):');
+                if (!url) return;
+                const title = window.prompt('Sound name:') ?? 'Custom sound';
+                const next: Sound = {
+                  id: Date.now(),
+                  title: title.trim() || 'Custom sound',
+                  artist: 'You',
+                  duration: 'custom',
+                  url: url.trim(),
+                  license: 'Custom (you must own rights)',
+                  source: 'Custom URL',
+                  clipStartSeconds: 0,
+                  clipEndSeconds: 120,
+                };
+                setCustomSounds((prev) => [next, ...prev]);
+              }}
+              className="px-3 py-1.5 rounded-full border border-[#E6B36A]/35 text-[#E6B36A] text-xs font-semibold"
+            >
+              Add URL
+            </button>
+            <button onClick={onClose} className="p-2 text-[#E6B36A]">
+              <X className="w-5 h-5" strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto">
@@ -124,6 +144,7 @@ function SoundPickerModal({
               <div className="text-left">
                 <p className="text-white font-medium leading-5">{s.title}</p>
                 <p className="text-white/60 text-sm leading-5">{s.artist}</p>
+                <p className="text-white/40 text-[11px] leading-5">{formatClip(s.clipStartSeconds, s.clipEndSeconds)} • {s.license} • {s.source}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -131,7 +152,7 @@ function SoundPickerModal({
                   onClick={() => togglePreview(s)}
                   className="w-10 h-10 rounded-full border border-[#E6B36A]/25 bg-black/50 flex items-center justify-center"
                 >
-                  {playingId === s.id ? (
+                  {playingId === String(s.id) ? (
                     <Pause className="w-5 h-5 text-[#E6B36A]" strokeWidth={2} />
                   ) : (
                     <Play className="w-5 h-5 text-[#E6B36A]" strokeWidth={2} />
@@ -502,7 +523,7 @@ export default function Create() {
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/60 border border-[#E6B36A]/35 backdrop-blur-sm"
           >
             <Music className="w-5 h-5 text-[#E6B36A]" strokeWidth={2} />
-            <span className="text-[#E6B36A] font-semibold">{sound ? `${sound.title}` : 'Add sound'}</span>
+            <span className="text-[#E6B36A] font-semibold">{sound ? `${sound.title}` : 'Add sound (no copyright)'}</span>
           </button>
         </div>
 

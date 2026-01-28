@@ -31,6 +31,7 @@ interface AuthStore {
     password: string,
     username?: string
   ) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
+  resendSignupConfirmation: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   getCurrentUser: () => User | null;
@@ -105,6 +106,21 @@ export const useAuthStore = create<AuthStore>()(
       const session = data.session ?? null;
       set({ session, user: mapSessionToUser(session), isAuthenticated: !!session, isLoading: false });
       return { error: null, needsEmailConfirmation: !session };
+    },
+
+    resendSignupConfirmation: async (email) => {
+      const emailRedirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined;
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo }
+      });
+      if (error) return { error: error.message };
+      return { error: null };
     },
 
     signOut: async () => {
