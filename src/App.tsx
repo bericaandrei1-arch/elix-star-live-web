@@ -22,6 +22,7 @@ import FriendsFeed from './pages/FriendsFeed';
 import EditProfile from './pages/EditProfile';
 import Settings from './pages/Settings';
 import CreatorLoginDetails from './pages/CreatorLoginDetails';
+import AuthCallback from './pages/AuthCallback';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
           <Route path="/music/:songId" element={<MusicFeed />} />
           <Route path="/create" element={<Create />} />
           <Route path="/creator/login-details" element={<CreatorLoginDetails />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />

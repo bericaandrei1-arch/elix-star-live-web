@@ -90,10 +90,16 @@ export const useAuthStore = create<AuthStore>()(
     signUpWithPassword: async (email, password, username) => {
       const userData: Record<string, unknown> = { level: 1 };
       if (username) userData.username = username;
+
+      const emailRedirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: userData }
+        options: { data: userData, emailRedirectTo }
       });
       if (error) return { error: error.message, needsEmailConfirmation: false };
       const session = data.session ?? null;
