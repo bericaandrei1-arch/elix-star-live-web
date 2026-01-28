@@ -212,6 +212,22 @@ export default function Upload() {
   const handlePost = () => {
       if (!recordedVideoUrl) return;
 
+      const picked = selectedSong ? musicTracks.find((t) => t.title === selectedSong) : undefined;
+      const resolvedMusic = picked && picked.url
+        ? {
+            id: `track_${picked.id}`,
+            title: picked.title,
+            artist: picked.artist,
+            duration: picked.duration,
+            previewUrl: picked.url,
+          }
+        : {
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Current User',
+            duration: '0:15',
+          };
+
       const newVideo = {
           id: Date.now().toString(),
           url: recordedVideoUrl,
@@ -228,12 +244,7 @@ export default function Upload() {
           },
           description: 'My new video! 🎥 #creation',
           hashtags: ['creation', 'video'],
-          music: {
-            id: 'original_sound',
-            title: 'Original Sound',
-            artist: 'Current User',
-            duration: '0:15'
-          },
+          music: resolvedMusic,
           stats: {
             views: 0,
             likes: 0,

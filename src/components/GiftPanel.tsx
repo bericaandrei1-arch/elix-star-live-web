@@ -80,6 +80,12 @@ interface GiftPanelProps {
 export function GiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
   const [activeGiftId, setActiveGiftId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const first = GIFTS[0];
+    if (!first) return;
+    setActiveGiftId(first.id);
+  }, []);
+
   return (
     <div className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[34vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
       <div className="flex justify-between items-center mb-1">

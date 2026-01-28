@@ -108,6 +108,13 @@ export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
     return map;
   }, [filteredGifts]);
 
+  useEffect(() => {
+    if (!inView) return;
+    const first = filteredGifts[0];
+    if (!first) return;
+    setActiveGiftId((prev) => prev ?? first.id);
+  }, [filteredGifts, inView]);
+
   return (
     <div ref={panelRef} className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[36vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
       {/* Header with Categories */}
