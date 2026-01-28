@@ -30,3 +30,4 @@ public/gifts/**/*.webm
 *.sln
 *.sw?
 .vercel
+_elix_index.html
