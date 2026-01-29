@@ -63,14 +63,14 @@ function App() {
           <Route path="/create" element={<Create />} />
           <Route path="/creator/login-details" element={<CreatorLoginDetails />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/inbox/:threadId" element={<ChatThread />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/copyright" element={<Copyright />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/inbox/:threadId" element={<ChatThread />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
