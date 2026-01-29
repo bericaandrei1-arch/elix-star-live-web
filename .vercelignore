@@ -1,0 +1,9 @@
+# Exclude fișiere mari și foldere inutile
+node_modules/.cache/
+dist/
+build/
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
