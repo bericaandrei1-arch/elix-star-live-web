@@ -102,9 +102,9 @@ export const useVideoStore = create<VideoStore>()(
       videos: [
         {
           id: 't1',
-          url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+          url: '/gifts/Elix Royal Golden Lion.mp4',
           thumbnail: 'https://picsum.photos/400/600?random=11',
-          duration: '0:30',
+          duration: '0:15',
           user: {
             id: 'test1',
             username: 'elix_music',
@@ -114,14 +114,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 12000,
             following: 240
           },
-          description: 'TEST: For You music preview (Song 1) #elix #music',
-          hashtags: ['elix', 'music', 'test'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song1',
-            title: 'ELIX Test Song 1',
-            artist: 'SoundHelix',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -136,14 +135,14 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         },
         {
           id: 't2',
-          url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+          url: '/gifts/Eternal Guardian Chest (Phoenix + Wolf + Owl).mp4',
           thumbnail: 'https://picsum.photos/400/600?random=12',
-          duration: '0:30',
+          duration: '0:15',
           user: {
             id: 'test2',
             username: 'elix_beats',
@@ -153,14 +152,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 8450,
             following: 120
           },
-          description: 'TEST: For You music preview (Song 2) #beats #gold',
-          hashtags: ['beats', 'gold', 'test'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song2',
-            title: 'ELIX Test Song 2',
-            artist: 'SoundHelix',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -175,14 +173,14 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         },
         {
           id: 't3',
-          url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+          url: '/gifts/Lightning Hypercar.mp4',
           thumbnail: 'https://picsum.photos/400/600?random=13',
-          duration: '0:30',
+          duration: '0:15',
           user: {
             id: 'test3',
             username: 'elix_radio',
@@ -192,14 +190,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 2100,
             following: 80
           },
-          description: 'TEST: For You music preview (Song 3) #radio #elix',
-          hashtags: ['radio', 'elix', 'test'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song3',
-            title: 'ELIX Test Song 3',
-            artist: 'SoundHelix',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -214,15 +211,15 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         }
         ,
         {
           id: 't4',
-          url: '/gifts/Zeus.webm',
+          url: '/gifts/Emerald Colossus Rhino.mp4',
           thumbnail: 'https://picsum.photos/400/600?random=14',
-          duration: '0:10',
+          duration: '0:15',
           user: {
             id: 'test4',
             username: 'elix_olympus',
@@ -232,14 +229,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 44210,
             following: 120
           },
-          description: 'Zeus gift preview #elix #gift',
-          hashtags: ['elix', 'gift'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song1',
-            title: 'Luxury Pulse',
-            artist: 'ELIX',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -254,14 +250,14 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         },
         {
           id: 't5',
-          url: '/gifts/Frostwing Ascendant.webm',
+          url: '/gifts/Mythic Guardian Vault.mp4',
           thumbnail: 'https://picsum.photos/400/600?random=15',
-          duration: '0:10',
+          duration: '0:15',
           user: {
             id: 'test5',
             username: 'elix_frost',
@@ -271,14 +267,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 19880,
             following: 310
           },
-          description: 'Frostwing gift preview #elix #gift',
-          hashtags: ['elix', 'gift'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song2',
-            title: 'Midnight Gold',
-            artist: 'ELIX',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -293,14 +288,14 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         },
         {
           id: 't6',
-          url: '/gifts/Elix Thunder God Rage.webm',
+          url: '/gifts/Molten fury of the lava dragon.mp4',
           thumbnail: 'https://picsum.photos/400/600?random=16',
-          duration: '0:10',
+          duration: '0:15',
           user: {
             id: 'test6',
             username: 'elix_thunder',
@@ -310,14 +305,13 @@ export const useVideoStore = create<VideoStore>()(
             followers: 33210,
             following: 95
           },
-          description: 'Thunder gift preview #elix #gift',
-          hashtags: ['elix', 'gift'],
+          description: 'High quality vertical test clip • 1080x1920 • no watermark',
+          hashtags: ['elix', 'foryou', '1080p'],
           music: {
-            id: 'song3',
-            title: 'Champagne Drift',
-            artist: 'ELIX',
-            duration: '0:30',
-            previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+            id: 'original_sound',
+            title: 'Original Sound',
+            artist: 'Creator',
+            duration: '0:15'
           },
           stats: {
             views: 0,
@@ -332,7 +326,7 @@ export const useVideoStore = create<VideoStore>()(
           isSaved: false,
           isFollowing: false,
           comments: [],
-          quality: 'auto',
+          quality: '1080p',
           privacy: 'public'
         }
       ],

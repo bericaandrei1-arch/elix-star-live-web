@@ -78,10 +78,11 @@ export default function EnhancedVideoPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const volume = 0.5;
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [videoSize, setVideoSize] = useState<{ w: number; h: number } | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
@@ -157,6 +158,7 @@ export default function EnhancedVideoPlayer({
 
     const handleLoadedMetadata = () => {
       setDuration(videoElement.duration);
+      setVideoSize({ w: videoElement.videoWidth, h: videoElement.videoHeight });
     };
 
     const handleEnded = () => {
@@ -185,7 +187,16 @@ export default function EnhancedVideoPlayer({
   // Auto-play/pause based on visibility
   useEffect(() => {
     if (isActive) {
-      videoRef.current?.play().catch(() => {});
+      const el = videoRef.current;
+      el
+        ?.play()
+        .catch((err) => {
+          if (!effectiveMuted) {
+            setIsMuted(true);
+            if (videoRef.current) videoRef.current.muted = true;
+            trackEvent('video_autoplay_sound_blocked', { videoId, name: err?.name });
+          }
+        });
       setIsPlaying(true);
       incrementViews(videoId);
       trackEvent('video_view', { videoId });
@@ -315,6 +326,7 @@ export default function EnhancedVideoPlayer({
           className="w-full h-full object-cover"
           loop
           playsInline
+          preload="auto"
           muted={effectiveMuted}
           onClick={handleVideoClick}
           onError={(e) => {
@@ -327,6 +339,12 @@ export default function EnhancedVideoPlayer({
             e.currentTarget.parentElement?.appendChild(errorText);
           }}
         />
+
+        {videoSize && (
+          <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-black/60 border border-white/10 text-[10px] text-white/80">
+            {videoSize.w}×{videoSize.h}
+          </div>
+        )}
 
         <div className="absolute top-3 left-3 right-3 h-1 rounded-full bg-white/15 overflow-hidden">
           <div

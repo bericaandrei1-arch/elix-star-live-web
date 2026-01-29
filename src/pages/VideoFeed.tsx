@@ -61,39 +61,34 @@ export default function VideoFeed() {
   const { videos } = useVideoStore();
   const promoBattle = useLivePromoStore((s) => s.promoBattle);
   const promoLive = useLivePromoStore((s) => s.promoLive);
-  const [activeVideoId, setActiveVideoId] = useState<string>('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<HomeTopTab>('foryou');
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const promoCount = (promoBattle ? 1 : 0) + (promoLive ? 1 : 0);
+  const [loopCount, setLoopCount] = useState(1);
+
+  const videoIds = Array.from({ length: loopCount }).flatMap(() => videos.map((v) => v.id));
 
   const feedItems: FeedItem[] = [
     ...(promoBattle ? ([{ kind: 'promo', promo: promoBattle }] as const) : []),
     ...(promoLive ? ([{ kind: 'promo', promo: promoLive }] as const) : []),
-    ...videos.map((v) => ({ kind: 'video' as const, videoId: v.id })),
+    ...videoIds.map((id) => ({ kind: 'video' as const, videoId: id })),
   ];
 
   useEffect(() => {
     if (videos.length === 0) return;
-    if (promoCount > 0) {
-      setActiveVideoId('');
-      return;
-    }
-    setActiveVideoId(videos[0].id);
+    setActiveIndex(0);
   }, [videos, promoCount]);
 
-  const handleVideoEnd = (videoId: string) => {
-    // Auto-scroll to next video when current one ends
-    const currentIndex = videos.findIndex((v) => v.id === videoId);
-    const feedIndex = promoCount + currentIndex;
-    if (currentIndex >= 0 && feedIndex < feedItems.length - 1) {
-      const container = containerRef.current;
-      if (container) {
-        container.scrollTo({
-          top: (feedIndex + 1) * container.clientHeight,
-          behavior: 'smooth'
-        });
-      }
+  const handleVideoEnd = (feedIndex: number) => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (feedIndex < feedItems.length - 1) {
+      container.scrollTo({
+        top: (feedIndex + 1) * container.clientHeight,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -105,14 +100,29 @@ export default function VideoFeed() {
     const height = container.clientHeight;
     
     const index = Math.round(scrollPosition / height);
-    const item = feedItems[index];
-    if (!item) return;
-    if (item.kind === 'video') {
-      setActiveVideoId(item.videoId);
-    } else {
-      setActiveVideoId('');
+    if (index < 0 || index >= feedItems.length) return;
+    setActiveIndex(index);
+
+    if (scrollPosition + height >= (feedItems.length - 2) * height) {
+      setLoopCount((c) => Math.min(20, c + 1));
     }
   };
+
+  const nextItem = feedItems[activeIndex + 1];
+  const nextVideoUrl =
+    nextItem && nextItem.kind === 'video' ? videos.find((v) => v.id === nextItem.videoId)?.url : undefined;
+
+  useEffect(() => {
+    if (!nextVideoUrl) return;
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'video';
+    link.href = nextVideoUrl;
+    document.head.appendChild(link);
+    return () => {
+      link.remove();
+    };
+  }, [nextVideoUrl]);
 
 
   return (
@@ -165,11 +175,11 @@ export default function VideoFeed() {
         </div>
       </div>
 
-      {feedItems.map((item) => {
+      {feedItems.map((item, index) => {
         if (item.kind === 'promo') {
           return (
             <div
-              key={`promo-${item.promo.type}-${item.promo.createdAt}`}
+              key={`promo-${index}`}
               className="h-full w-full snap-start relative flex justify-center bg-black"
             >
               <div className="w-full h-full md:w-[500px] relative">
@@ -185,17 +195,27 @@ export default function VideoFeed() {
         }
 
         return (
-          <div key={item.videoId} className="h-full w-full snap-start relative flex justify-center bg-black">
+          <div key={`video-${index}`} className="h-full w-full snap-start relative flex justify-center bg-black">
             <div className="w-full h-full md:w-[500px] relative">
               <EnhancedVideoPlayer
                 videoId={item.videoId}
-                isActive={activeVideoId === item.videoId}
-                onVideoEnd={() => handleVideoEnd(item.videoId)}
+                isActive={activeIndex === index}
+                onVideoEnd={() => handleVideoEnd(index)}
               />
             </div>
           </div>
         );
       })}
+
+      {nextVideoUrl && (
+        <video
+          src={nextVideoUrl}
+          preload="auto"
+          muted
+          playsInline
+          className="hidden"
+        />
+      )}
     </div>
   );
 }
