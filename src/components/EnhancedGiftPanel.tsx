@@ -10,8 +10,6 @@ interface GiftPanelProps {
   userCoins: number;
 }
 
-type GiftCategory = 'all' | 'popular' | 'new' | 'exclusive';
-
 function useInView<T extends Element>(options?: IntersectionObserverInit) {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
@@ -84,45 +82,30 @@ const GiftVideo: React.FC<{ src: string; poster?: string; active: boolean }> = (
 };
 
 export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
-  const [selectedCategory, setSelectedCategory] = useState<GiftCategory>('all');
   const lastTapRef = useRef<{ id: string; ts: number } | null>(null);
   const [activeGiftId, setActiveGiftId] = useState<string | null>(null);
   const { ref: panelRef, inView } = useInView<HTMLDivElement>({ root: null, threshold: 0.05 });
 
-  const categories = [
-    { id: 'all', name: 'All', icon: '🎁' },
-    { id: 'popular', name: 'Popular', icon: '🔥' },
-    { id: 'new', name: 'New', icon: '✨' },
-    { id: 'exclusive', name: 'Exclusive', icon: '💎' },
-  ] as const;
-
-  const filteredGifts =
-    selectedCategory === 'all'
-      ? GIFTS
-      : selectedCategory === 'popular'
-      ? GIFTS.filter((g) => g.coins > 8000)
-      : selectedCategory === 'new'
-      ? GIFTS.slice(-5)
-      : GIFTS.filter((g) => g.coins > 15000);
+  const universeGift = useMemo(() => GIFTS.find((g) => g.giftType === 'universe'), []);
+  const bigGifts = useMemo(() => GIFTS.filter((g) => g.giftType === 'big'), []);
 
   const posterByGiftId = useMemo(() => {
     const map = new Map<string, string | undefined>();
-    for (const g of filteredGifts) {
+    for (const g of [universeGift, ...bigGifts].filter(Boolean) as typeof GIFTS) {
       map.set(g.id, isImageUrl(g.icon) ? g.icon : undefined);
     }
     return map;
-  }, [filteredGifts]);
+  }, [bigGifts, universeGift]);
 
   useEffect(() => {
     if (!inView) return;
-    const first = filteredGifts[0];
+    const first = universeGift ?? bigGifts[0];
     if (!first) return;
     setActiveGiftId((prev) => prev ?? first.id);
-  }, [filteredGifts, inView]);
+  }, [bigGifts, inView, universeGift]);
 
   return (
     <div ref={panelRef} className="bg-[#1a1a1a]/95 backdrop-blur-xl rounded-t-3xl p-2 pb-4 max-h-[36vh] overflow-y-auto no-scrollbar border-t border-secondary/30 shadow-2xl animate-slide-up">
-      {/* Header with Categories */}
       <div className="flex justify-between items-center mb-1">
         <h3 className="text-secondary font-bold text-base flex items-center gap-2">
           <Gift className="text-secondary" size={18} /> 
@@ -137,74 +120,93 @@ export function EnhancedGiftPanel({ onSelectGift, userCoins }: GiftPanelProps) {
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2 mb-1 overflow-x-auto">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-              selectedCategory === category.id
-                ? 'bg-secondary text-black'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
-          >
-            <span>{category.icon}</span>
-            <span>{category.name}</span>
-          </button>
-        ))}
-      </div>
+      {universeGift && (
+        <div className="mt-2">
+          <div className="px-2 pb-2">
+            <div className="text-xs font-bold text-secondary">Universe</div>
+            <div className="text-[10px] text-white/50">Only one • 100,000 coins</div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            <button
+              key={universeGift.id}
+              onClick={() => {
+                const now = Date.now();
+                const last = lastTapRef.current;
+                setActiveGiftId(universeGift.id);
+                onSelectGift(universeGift);
+                if (last && last.id === universeGift.id && now - last.ts <= 350) {
+                  onSelectGift(universeGift);
+                  lastTapRef.current = null;
+                  return;
+                }
+                lastTapRef.current = { id: universeGift.id, ts: now };
+              }}
+              onMouseEnter={() => setActiveGiftId(universeGift.id)}
+              onMouseLeave={() => setActiveGiftId((v) => (v === universeGift.id ? null : v))}
+              className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
+            >
+              <div className="w-12 h-12 flex items-center justify-center text-3xl bg-gradient-to-br from-black/40 to-black/10 rounded-full shadow-inner group-hover:shadow-secondary/20 transition-all overflow-hidden relative">
+                <GiftVideo
+                  src={universeGift.video}
+                  poster={posterByGiftId.get(universeGift.id)}
+                  active={inView && activeGiftId === universeGift.id}
+                />
+                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+              </div>
+              <div className="text-center z-10">
+                <p className="text-[10px] text-white/90 font-medium truncate w-14 mb-0.5 group-hover:text-white">
+                  {universeGift.name}
+                </p>
+                <div className="flex items-center justify-center gap-1">
+                  <Coins size={9} className="text-secondary" />
+                  <p className="text-[10px] text-secondary font-bold">{universeGift.coins}</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Gift Grid */}
-      <div className="grid grid-cols-4 gap-2">
-        {filteredGifts.map((gift) => (
-          <button
-            key={gift.id}
-            onClick={() => {
-              const now = Date.now();
-              const last = lastTapRef.current;
-              setActiveGiftId(gift.id);
-              onSelectGift(gift);
-              if (last && last.id === gift.id && now - last.ts <= 350) {
+      <div className="mt-4">
+        <div className="px-2 pb-2">
+          <div className="text-xs font-bold text-secondary">Big Gifts</div>
+          <div className="text-[10px] text-white/50">All big gifts are 45,000 coins</div>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {bigGifts.map((gift) => (
+            <button
+              key={gift.id}
+              onClick={() => {
+                const now = Date.now();
+                const last = lastTapRef.current;
+                setActiveGiftId(gift.id);
                 onSelectGift(gift);
-                lastTapRef.current = null;
-                return;
-              }
-              lastTapRef.current = { id: gift.id, ts: now };
-            }}
-            onMouseEnter={() => setActiveGiftId(gift.id)}
-            onMouseLeave={() => setActiveGiftId((v) => (v === gift.id ? null : v))}
-            className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-transparent hover:border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
-          >
-            <div className="w-12 h-12 flex items-center justify-center text-3xl bg-gradient-to-br from-black/40 to-black/10 rounded-full shadow-inner group-hover:shadow-secondary/20 transition-all overflow-hidden relative">
-              <GiftVideo src={gift.video} poster={posterByGiftId.get(gift.id)} active={inView && activeGiftId === gift.id} />
-              <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-            </div>
-            <div className="text-center z-10">
-              <p className="text-[10px] text-white/90 font-medium truncate w-14 mb-0.5 group-hover:text-white">{gift.name}</p>
-              <div className="flex items-center justify-center gap-1">
-                <Coins size={9} className="text-secondary" />
-                <p className="text-[10px] text-secondary font-bold">{gift.coins}</p>
+                if (last && last.id === gift.id && now - last.ts <= 350) {
+                  onSelectGift(gift);
+                  lastTapRef.current = null;
+                  return;
+                }
+                lastTapRef.current = { id: gift.id, ts: now };
+              }}
+              onMouseEnter={() => setActiveGiftId(gift.id)}
+              onMouseLeave={() => setActiveGiftId((v) => (v === gift.id ? null : v))}
+              className="group flex flex-col items-center gap-1.5 p-1 rounded-xl hover:bg-white/5 border border-transparent hover:border-secondary/30 transition-all duration-300 active:scale-95 relative overflow-hidden"
+            >
+              <div className="w-12 h-12 flex items-center justify-center text-3xl bg-gradient-to-br from-black/40 to-black/10 rounded-full shadow-inner group-hover:shadow-secondary/20 transition-all overflow-hidden relative">
+                <GiftVideo src={gift.video} poster={posterByGiftId.get(gift.id)} active={inView && activeGiftId === gift.id} />
+                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
               </div>
-            </div>
-            {/* Hover Glow Effect */}
-            <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity pointer-events-none" />
-            
-            {/* New Badge */}
-            {parseInt(gift.id) > 10 && (
-              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
-                NEW
+              <div className="text-center z-10">
+                <p className="text-[10px] text-white/90 font-medium truncate w-14 mb-0.5 group-hover:text-white">{gift.name}</p>
+                <div className="flex items-center justify-center gap-1">
+                  <Coins size={9} className="text-secondary" />
+                  <p className="text-[10px] text-secondary font-bold">{gift.coins}</p>
+                </div>
               </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Gift Stats */}
-      <div className="mt-4 text-center">
-        <p className="text-white/60 text-xs">
-          {filteredGifts.length} gifts available • Use video previews to see animations
-        </p>
+              <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity pointer-events-none" />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
