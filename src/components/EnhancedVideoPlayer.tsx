@@ -4,14 +4,14 @@ import {
   Bookmark, 
   Music,
   UserPlus,
-  Flag,
-  Download,
-  Link,
   MessageCircle,
   Share2,
+  Flag,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useVideoStore } from '../store/useVideoStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { trackEvent } from '../lib/analytics';
 import EnhancedCommentsModal from './EnhancedCommentsModal';
 import EnhancedLikesModal from './EnhancedLikesModal';
 import ShareModal from './ShareModal';
@@ -79,11 +79,9 @@ export default function EnhancedVideoPlayer({
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [volume, setVolume] = useState(0.5);
+  const volume = 0.5;
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
-  const [quality, setQuality] = useState<'auto' | '720p' | '1080p'>('auto');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
@@ -93,6 +91,7 @@ export default function EnhancedVideoPlayer({
   const [showHeartAnimation, setShowHeartAnimation] = useState(false);
   
   const navigate = useNavigate();
+  const { muteAllSounds } = useSettingsStore();
   const { 
     videos, 
     toggleLike, 
@@ -102,6 +101,7 @@ export default function EnhancedVideoPlayer({
   } = useVideoStore();
   
   const video = videos.find(v => v.id === videoId);
+  const effectiveMuted = muteAllSounds || isMuted;
   
   // Video playback controls
   const togglePlay = useCallback(() => {
@@ -110,14 +110,18 @@ export default function EnhancedVideoPlayer({
       audioRef.current?.pause();
     } else {
       videoRef.current?.play().catch(() => {});
-      if (!isMuted && audioRef.current) {
+      if (!effectiveMuted && audioRef.current) {
         audioRef.current.play().catch(() => {});
       }
     }
     setIsPlaying(prev => !prev);
-  }, [isMuted, isPlaying]);
+  }, [effectiveMuted, isPlaying]);
 
   const toggleMute = () => {
+    if (muteAllSounds) {
+      trackEvent('video_toggle_mute_blocked_global', { videoId });
+      return;
+    }
     if (videoRef.current) {
       const newMuted = !isMuted;
       videoRef.current.muted = newMuted;
@@ -137,52 +141,8 @@ export default function EnhancedVideoPlayer({
         audioRef.current.play().catch(() => {});
       }
     }
-  };
 
-  const handleVolumeChange = (newVolume: number) => {
-    setVolume(newVolume);
-    if (videoRef.current) {
-      videoRef.current.volume = newVolume;
-      if (newVolume > 0 && isMuted) {
-        setIsMuted(false);
-        videoRef.current.muted = false;
-      } else if (newVolume === 0 && !isMuted) {
-        setIsMuted(true);
-        videoRef.current.muted = true;
-      }
-    }
-
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-      if (newVolume > 0 && isMuted) {
-        setIsMuted(false);
-        audioRef.current.muted = false;
-        audioRef.current.play().catch(() => {});
-      } else if (newVolume === 0 && !isMuted) {
-        setIsMuted(true);
-        audioRef.current.muted = true;
-        audioRef.current.pause();
-      }
-    }
-  };
-
-  const handlePlaybackRateChange = (rate: number) => {
-    setPlaybackRate(rate);
-    if (videoRef.current) {
-      videoRef.current.playbackRate = rate;
-    }
-  };
-
-  const handleQualityChange = (newQuality: 'auto' | '720p' | '1080p') => {
-    setQuality(newQuality);
-    // In a real app, this would switch video sources
-  };
-
-  const handleSeek = (time: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
+    trackEvent('video_toggle_mute', { videoId, muted: !isMuted });
   };
 
   // Video event handlers
@@ -228,6 +188,7 @@ export default function EnhancedVideoPlayer({
       videoRef.current?.play().catch(() => {});
       setIsPlaying(true);
       incrementViews(videoId);
+      trackEvent('video_view', { videoId });
 
       const audio = audioRef.current;
       if (audio && video?.music?.previewUrl) {
@@ -235,9 +196,9 @@ export default function EnhancedVideoPlayer({
           audio.src = video.music.previewUrl;
         }
         audio.currentTime = 0;
-        audio.muted = isMuted;
+        audio.muted = effectiveMuted;
         audio.volume = volume;
-        if (!isMuted) {
+        if (!effectiveMuted) {
           audio.play().catch(() => {});
         }
       }
@@ -246,7 +207,17 @@ export default function EnhancedVideoPlayer({
       setIsPlaying(false);
       audioRef.current?.pause();
     }
-  }, [isActive, videoId, incrementViews, isMuted, volume, video?.music?.previewUrl]);
+  }, [effectiveMuted, incrementViews, isActive, video?.music?.previewUrl, videoId, volume]);
+
+  useEffect(() => {
+    if (!muteAllSounds) return;
+    setIsMuted(true);
+    if (videoRef.current) videoRef.current.muted = true;
+    if (audioRef.current) {
+      audioRef.current.muted = true;
+      audioRef.current.pause();
+    }
+  }, [muteAllSounds]);
 
   // Mouse/touch interactions
   const handleVideoClick = (e: React.MouseEvent) => {
@@ -283,34 +254,42 @@ export default function EnhancedVideoPlayer({
   // Action handlers
   const handleLike = () => {
     toggleLike(videoId);
+    trackEvent('video_like_toggle', { videoId, next: !video.isLiked });
   };
 
   const handleSave = () => {
     toggleSave(videoId);
+    trackEvent('video_save_toggle', { videoId, next: !video.isSaved });
   };
 
   const handleFollow = () => {
     toggleFollow(video.user.id);
+    trackEvent('video_follow_toggle', { videoId, userId: video.user.id, next: !video.isFollowing });
   };
 
   const handleShare = () => {
     setShowShareModal(true);
+    trackEvent('video_share_open', { videoId });
   };
 
   const handleComment = () => {
     setShowComments(true);
+    trackEvent('video_comments_open', { videoId });
   };
 
   const handleProfileClick = () => {
     setShowUserProfile(true);
+    trackEvent('video_profile_open', { videoId, userId: video.user.id });
   };
 
   const handleMusicClick = () => {
     navigate(`/music/${encodeURIComponent(video.music.id)}`);
+    trackEvent('video_music_open', { videoId, musicId: video.music.id });
   };
 
   const handleReport = () => {
     setShowReportModal(true);
+    trackEvent('video_report_open', { videoId });
   };
 
   // Format functions
@@ -336,7 +315,7 @@ export default function EnhancedVideoPlayer({
           className="w-full h-full object-cover"
           loop
           playsInline
-          muted={isMuted}
+          muted={effectiveMuted}
           onClick={handleVideoClick}
           onError={(e) => {
             console.warn(`Video ${video.id} failed to load:`, e);
@@ -435,6 +414,13 @@ export default function EnhancedVideoPlayer({
           onClick={handleShare}
           icon={Share2}
           label={formatNumber(video.stats.shares)}
+          className="mt-[5px]"
+        />
+
+        <SidebarButton
+          onClick={handleReport}
+          icon={Flag}
+          label="Report"
           className="mt-[5px]"
         />
 

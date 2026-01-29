@@ -4,9 +4,12 @@ import { setCachedCameraStream } from '../lib/cameraStream';
 import { RefreshCw, Zap, Clock, Music, Check, Play, Square, RotateCcw } from 'lucide-react';
 import { useVideoStore } from '../store/useVideoStore';
 import { SOUND_TRACKS, type SoundTrack } from '../lib/soundLibrary';
+import { trackEvent } from '../lib/analytics';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export default function Upload() {
   const navigate = useNavigate();
+  const { muteAllSounds } = useSettingsStore();
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -15,13 +18,26 @@ export default function Upload() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
   const [showMusicModal, setShowMusicModal] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<string | null>(null);
+  const [selectedAudioId, setSelectedAudioId] = useState<string>('original');
+  const [postWithoutAudio, setPostWithoutAudio] = useState(false);
+  const [caption, setCaption] = useState('');
+  const [hashtagsText, setHashtagsText] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
+  const [postProgress, setPostProgress] = useState(0);
   const [playingTrackId, setPlayingTrackId] = useState<number | null>(null); // Track currently playing preview
   const previewAudioRef = useRef<HTMLAudioElement | null>(null); // For list preview
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null); // For video background
   const [customTracks, setCustomTracks] = useState<SoundTrack[]>([]);
 
   const { addVideo } = useVideoStore();
+
+  type UploadMusic = {
+    id: string;
+    title: string;
+    artist: string;
+    duration: string;
+    previewUrl?: string;
+  };
 
   const formatClip = (start: number, end: number) => {
     const total = Math.max(0, Math.floor(end - start));
@@ -32,10 +48,23 @@ export default function Upload() {
 
   const musicTracks: SoundTrack[] = [...customTracks, ...SOUND_TRACKS];
 
+  const getSelectedLabel = () => {
+    if (postWithoutAudio || selectedAudioId === 'none') return 'No audio';
+    if (selectedAudioId === 'original') return 'Original Sound';
+    if (selectedAudioId.startsWith('track_')) {
+      const raw = selectedAudioId.slice('track_'.length);
+      const id = Number(raw);
+      const t = musicTracks.find((x) => x.id === id);
+      return t ? t.title : 'Add Sound';
+    }
+    return 'Add Sound';
+  };
+
    const handleSelectMusic = (track: SoundTrack) => {
-       setSelectedSong(track.title);
+       setSelectedAudioId(`track_${track.id}`);
+       setPostWithoutAudio(false);
        setShowMusicModal(false);
-       // Stop preview if playing
+       trackEvent('upload_select_audio', { type: 'library', trackId: track.id, title: track.title });
        if (previewAudioRef.current) {
            previewAudioRef.current.pause();
            setPlayingTrackId(null);
@@ -44,6 +73,11 @@ export default function Upload() {
  
    const togglePreview = (e: React.MouseEvent, track: SoundTrack) => {
        e.stopPropagation(); // Don't select, just play
+
+       if (muteAllSounds) {
+           trackEvent('upload_preview_audio_blocked_global_mute', { trackId: track.id });
+           return;
+       }
        
        if (playingTrackId === track.id) {
            // Stop
@@ -89,14 +123,16 @@ export default function Upload() {
        }
    };
 
-  // Auto-select a random song on mount if none selected
-   useEffect(() => {
-       if (!selectedSong) {
-           const playable = musicTracks.filter((t) => !!t.url);
-           const randomTrack = playable[Math.floor(Math.random() * playable.length)];
-           if (randomTrack) setSelectedSong(randomTrack.title);
-       }
-   }, []);
+  useEffect(() => {
+    if (!recordedVideoUrl) {
+      setCaption('');
+      setHashtagsText('');
+      setPostWithoutAudio(false);
+      setSelectedAudioId('original');
+      setIsPosting(false);
+      setPostProgress(0);
+    }
+  }, [recordedVideoUrl]);
 
    // Start Camera
   useEffect(() => {
@@ -196,68 +232,108 @@ export default function Upload() {
 
   // Audio Preview Logic for Recorded Video
   useEffect(() => {
-      if (recordedVideoUrl && selectedSong) {
-          const track = musicTracks.find(t => t.title === selectedSong);
-          if (track && track.url) {
-              // Stop any previous background
-              if (backgroundAudioRef.current) {
-                  backgroundAudioRef.current.pause();
-              }
-              
-              // Start backing track
-              backgroundAudioRef.current = new Audio(track.url);
-              const start = Math.max(0, track.clipStartSeconds);
-              const end = Math.max(start, track.clipEndSeconds);
-              backgroundAudioRef.current.loop = false;
-              backgroundAudioRef.current.volume = 0.5; // Background volume
-              backgroundAudioRef.current.currentTime = start;
-              backgroundAudioRef.current.ontimeupdate = () => {
-                const a = backgroundAudioRef.current;
-                if (!a) return;
-                if (end > start && a.currentTime >= end) {
-                  a.currentTime = start;
-                  a.play().catch(() => {});
-                }
-              };
-              backgroundAudioRef.current.play().catch(e => console.log("Auto play audio failed", e));
-          }
-      } else if (backgroundAudioRef.current) {
-          // If no song selected or no video, stop background
-          backgroundAudioRef.current.pause();
+      const shouldPlayTrack =
+        !!recordedVideoUrl &&
+        !muteAllSounds &&
+        !postWithoutAudio &&
+        selectedAudioId.startsWith('track_');
+
+      if (!shouldPlayTrack) {
+        if (backgroundAudioRef.current) backgroundAudioRef.current.pause();
+        return;
       }
 
-      return () => {
-          if (backgroundAudioRef.current) {
-              backgroundAudioRef.current.pause();
-              // Don't null it here to allow resume if re-rendered, but pause is safe
-          }
+      const raw = selectedAudioId.slice('track_'.length);
+      const id = Number(raw);
+      const track = musicTracks.find((t) => t.id === id);
+      if (!track?.url) {
+        if (backgroundAudioRef.current) backgroundAudioRef.current.pause();
+        return;
+      }
+
+      if (backgroundAudioRef.current) {
+        backgroundAudioRef.current.pause();
+      }
+
+      backgroundAudioRef.current = new Audio(track.url);
+      const start = Math.max(0, track.clipStartSeconds);
+      const end = Math.max(start, track.clipEndSeconds);
+      backgroundAudioRef.current.loop = false;
+      backgroundAudioRef.current.volume = 0.5;
+      backgroundAudioRef.current.currentTime = start;
+      backgroundAudioRef.current.ontimeupdate = () => {
+        const a = backgroundAudioRef.current;
+        if (!a) return;
+        if (end > start && a.currentTime >= end) {
+          a.currentTime = start;
+          a.play().catch(() => {});
+        }
       };
-  }, [recordedVideoUrl, selectedSong]);
+      backgroundAudioRef.current.play().catch(() => {});
 
-  const handlePost = () => {
-      if (!recordedVideoUrl) return;
+      return () => {
+        if (backgroundAudioRef.current) backgroundAudioRef.current.pause();
+      };
+  }, [muteAllSounds, postWithoutAudio, recordedVideoUrl, selectedAudioId, musicTracks]);
 
-      const picked = selectedSong ? musicTracks.find((t) => t.title === selectedSong) : undefined;
-      const resolvedMusic = picked && picked.url
-        ? {
+  const handlePost = async () => {
+      if (!recordedVideoUrl || isPosting) return;
+
+      const normalizedCaption = caption.trim();
+      const captionHashtags = Array.from(normalizedCaption.matchAll(/#([\p{L}0-9_]+)/gu)).map((m) => m[1]);
+      const manualHashtags = hashtagsText
+        .split(/[\s,]+/)
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((t) => (t.startsWith('#') ? t.slice(1) : t));
+
+      const hashtags = Array.from(new Set([...captionHashtags, ...manualHashtags].map((h) => h.toLowerCase()))).slice(0, 20);
+
+      let resolvedMusic: UploadMusic = {
+        id: 'original_sound',
+        title: 'Original Sound',
+        artist: 'Current User',
+        duration: '0:15',
+      };
+
+      if (postWithoutAudio || selectedAudioId === 'none') {
+        resolvedMusic = { id: 'no_audio', title: 'No audio', artist: '', duration: '0:15' };
+      } else if (selectedAudioId.startsWith('track_')) {
+        const raw = selectedAudioId.slice('track_'.length);
+        const id = Number(raw);
+        const picked = musicTracks.find((t) => t.id === id);
+        if (picked?.url) {
+          resolvedMusic = {
             id: `track_${picked.id}`,
             title: picked.title,
             artist: picked.artist,
             duration: formatClip(picked.clipStartSeconds, picked.clipEndSeconds),
             previewUrl: picked.url,
-          }
-        : {
-            id: 'original_sound',
-            title: 'Original Sound',
-            artist: 'Current User',
-            duration: '0:15',
           };
+        }
+      }
+
+      setIsPosting(true);
+      setPostProgress(0);
+      trackEvent('upload_post_start', { hasCaption: !!normalizedCaption, hashtagsCount: hashtags.length, audio: resolvedMusic.id });
+
+      await new Promise<void>((resolve) => {
+        const started = Date.now();
+        const tick = () => {
+          const elapsed = Date.now() - started;
+          const next = Math.min(100, Math.floor((elapsed / 1100) * 100));
+          setPostProgress(next);
+          if (next >= 100) resolve();
+          else window.setTimeout(tick, 60);
+        };
+        tick();
+      });
 
       const newVideo = {
           id: Date.now().toString(),
           url: recordedVideoUrl,
           thumbnail: `https://picsum.photos/400/600?random=${Date.now()}`,
-          duration: '0:15', // Default duration
+          duration: '0:15',
           user: {
             id: 'current_user',
             username: 'me',
@@ -267,8 +343,8 @@ export default function Upload() {
             followers: 1234,
             following: 567
           },
-          description: 'My new video! 🎥 #creation',
-          hashtags: ['creation', 'video'],
+          description: normalizedCaption || 'New video',
+          hashtags,
           music: resolvedMusic,
           stats: {
             views: 0,
@@ -287,10 +363,11 @@ export default function Upload() {
       };
 
       addVideo(newVideo);
-      
-      // Reset state to allow new recording without leaving
+      trackEvent('upload_post_success', { videoId: newVideo.id });
       setRecordedVideoUrl(null);
       setChunks([]);
+      setIsPosting(false);
+      setPostProgress(0);
       alert("Video Posted to For You Feed! ✅");
   };
 
@@ -344,9 +421,61 @@ export default function Upload() {
                     >
                         <Music size={14} className="text-white" />
                         <span className="text-white text-xs font-bold truncate max-w-[120px]">
-                            {selectedSong || "Add Sound"}
+                            {getSelectedLabel()}
                         </span>
                     </button>
+               </div>
+
+               <div className="absolute bottom-[22%] left-0 right-0 z-20 px-4 pointer-events-auto">
+                 <div className="bg-black/55 backdrop-blur-md border border-white/10 rounded-2xl p-3 space-y-3">
+                   <textarea
+                     value={caption}
+                     onChange={(e) => setCaption(e.target.value)}
+                     placeholder="Write a caption…"
+                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none resize-none h-20"
+                     aria-label="Caption"
+                   />
+                   <input
+                     value={hashtagsText}
+                     onChange={(e) => setHashtagsText(e.target.value)}
+                     placeholder="Hashtags (ex: elix, live, creator)"
+                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm outline-none"
+                     aria-label="Hashtags"
+                   />
+                   <div className="flex items-center justify-between">
+                     <div className="text-xs text-white/70 font-semibold">Post without audio</div>
+                     <button
+                       type="button"
+                       className={`w-12 h-7 rounded-full border transition-colors ${
+                         postWithoutAudio ? 'bg-[#E6B36A] border-[#E6B36A]' : 'bg-white/10 border-white/10'
+                       }`}
+                       onClick={() => {
+                         const next = !postWithoutAudio;
+                         setPostWithoutAudio(next);
+                         if (next) setSelectedAudioId('none');
+                         trackEvent('upload_toggle_no_audio', { value: next });
+                       }}
+                       aria-label="Toggle post without audio"
+                     >
+                       <div
+                         className={`w-6 h-6 rounded-full bg-black transition-transform ${
+                           postWithoutAudio ? 'translate-x-5' : 'translate-x-1'
+                         }`}
+                       />
+                     </button>
+                   </div>
+                   {isPosting ? (
+                     <div className="w-full">
+                       <div className="flex items-center justify-between text-xs text-white/70 mb-1">
+                         <span>Posting…</span>
+                         <span>{postProgress}%</span>
+                       </div>
+                       <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                         <div className="h-full bg-[#E6B36A]" style={{ width: `${postProgress}%` }} />
+                       </div>
+                     </div>
+                   ) : null}
+                 </div>
                </div>
 
                {/* Preview Controls - Custom Buttons Over Overlay */}
@@ -364,13 +493,14 @@ export default function Upload() {
 
                    <button 
                        onClick={handlePost}
-                       className="flex flex-col items-center gap-2 group"
-                       title="Post / Play"
+                       className="flex flex-col items-center gap-2 group disabled:opacity-60"
+                       title="Post"
+                       disabled={isPosting}
                    >
                        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg border-2 border-white group-hover:scale-110 transition-transform">
                            <Check size={32} />
                        </div>
-                       <span className="text-white font-bold text-sm shadow-black drop-shadow-md">Post</span>
+                       <span className="text-white font-bold text-sm shadow-black drop-shadow-md">{isPosting ? 'Posting' : 'Post'}</span>
                    </button>
                </div>
            </div>
@@ -420,7 +550,7 @@ export default function Upload() {
                   >
                     <Music size={14} className="text-white" />
                     <span className="text-white text-xs font-bold truncate max-w-[120px]">
-                        {selectedSong || "Add Sound"}
+                        {getSelectedLabel()}
                     </span>
                   </button>
 
@@ -572,6 +702,47 @@ export default function Upload() {
                       </div>
 
                       <div className="flex-1 overflow-y-auto space-y-2 pb-10">
+                          <div className="grid grid-cols-2 gap-2 pb-2">
+                            <button
+                              type="button"
+                              className={`px-3 py-3 rounded-xl border text-left ${
+                                selectedAudioId === 'original' && !postWithoutAudio
+                                  ? 'bg-[#E6B36A] border-[#E6B36A] text-black'
+                                  : 'bg-white/5 border-white/10 text-white'
+                              }`}
+                              onClick={() => {
+                                setSelectedAudioId('original');
+                                setPostWithoutAudio(false);
+                                trackEvent('upload_select_audio', { type: 'original' });
+                                setShowMusicModal(false);
+                              }}
+                            >
+                              <div className="text-sm font-bold">Original Sound</div>
+                              <div className={`text-[11px] ${selectedAudioId === 'original' && !postWithoutAudio ? 'text-black/70' : 'text-white/60'}`}>
+                                Use the captured audio
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              className={`px-3 py-3 rounded-xl border text-left ${
+                                postWithoutAudio || selectedAudioId === 'none'
+                                  ? 'bg-[#E6B36A] border-[#E6B36A] text-black'
+                                  : 'bg-white/5 border-white/10 text-white'
+                              }`}
+                              onClick={() => {
+                                setSelectedAudioId('none');
+                                setPostWithoutAudio(true);
+                                trackEvent('upload_select_audio', { type: 'none' });
+                                setShowMusicModal(false);
+                              }}
+                            >
+                              <div className="text-sm font-bold">No audio</div>
+                              <div className={`text-[11px] ${postWithoutAudio || selectedAudioId === 'none' ? 'text-black/70' : 'text-white/60'}`}>
+                                Publish muted audio
+                              </div>
+                            </button>
+                          </div>
+
                           {musicTracks.map((track) => (
                               <div 
                                 key={track.id}
@@ -595,7 +766,9 @@ export default function Upload() {
                                           <p className="text-white/40 text-[11px]">{track.license}</p>
                                       </div>
                                   </div>
-                                  {selectedSong === track.title && <Check className="text-green-400" size={20} />}
+                                  {selectedAudioId === `track_${track.id}` && !postWithoutAudio && (
+                                    <Check className="text-green-400" size={20} />
+                                  )}
                               </div>
                           ))}
                       </div>

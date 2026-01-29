@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 interface GiftOverlayProps {
   videoSrc: string | null;
@@ -7,9 +8,11 @@ interface GiftOverlayProps {
 
 export function GiftOverlay({ videoSrc, onEnded }: GiftOverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { muteAllSounds } = useSettingsStore();
 
   useEffect(() => {
     if (videoSrc && videoRef.current) {
+      videoRef.current.muted = muteAllSounds;
       videoRef.current.load();
       const playPromise = videoRef.current.play();
       
@@ -28,7 +31,7 @@ export function GiftOverlay({ videoSrc, onEnded }: GiftOverlayProps) {
           });
       }
     }
-  }, [videoSrc]);
+  }, [muteAllSounds, videoSrc]);
 
   if (!videoSrc) return null;
 
@@ -45,6 +48,7 @@ export function GiftOverlay({ videoSrc, onEnded }: GiftOverlayProps) {
                 className="w-full h-full object-cover drop-shadow-2xl" 
                 playsInline
                 preload="auto"
+                muted={muteAllSounds}
                 onEnded={onEnded}
                 onError={(e) => {
                     console.error("Video error:", e);

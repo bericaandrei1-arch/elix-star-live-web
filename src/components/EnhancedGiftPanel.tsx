@@ -43,17 +43,14 @@ const GiftVideo: React.FC<{ src: string; poster?: string; active: boolean }> = (
   const [failed, setFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  if (failed) {
-    return (
-      <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-        <span className="text-2xl">🎁</span>
-      </div>
-    );
-  }
-
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
+
+    if (failed) {
+      el.pause();
+      return;
+    }
 
     if (!active) {
       el.pause();
@@ -61,7 +58,15 @@ const GiftVideo: React.FC<{ src: string; poster?: string; active: boolean }> = (
     }
 
     el.play().catch(() => {});
-  }, [active]);
+  }, [active, failed]);
+
+  if (failed) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+        <span className="text-2xl">🎁</span>
+      </div>
+    );
+  }
 
   return (
     <video

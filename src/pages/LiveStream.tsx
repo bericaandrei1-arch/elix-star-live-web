@@ -116,8 +116,8 @@ export default function LiveStream() {
   const [battleWinner, setBattleWinner] = useState<'me' | 'opponent' | 'draw' | null>(null);
   const [giftTarget, setGiftTarget] = useState<'me' | 'opponent'>('me');
   const lastScreenTapRef = useRef<number>(0);
-  const [liveLikes, setLiveLikes] = useState(0);
-  const [battleLikes, setBattleLikes] = useState(0);
+  const [, setLiveLikes] = useState(0);
+  const [, setBattleLikes] = useState(0);
   const [universeQueue, setUniverseQueue] = useState<UniverseTickerMessage[]>([]);
   const [currentUniverse, setCurrentUniverse] = useState<UniverseTickerMessage | null>(null);
 
@@ -318,7 +318,7 @@ export default function LiveStream() {
           videoRef.current.srcObject = stream;
           videoRef.current.play().catch(() => {});
         }
-      } catch (err) {
+      } catch {
         setCameraError('Camera access denied');
       }
     };

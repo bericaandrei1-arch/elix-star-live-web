@@ -282,8 +282,10 @@ export default function Create() {
         if (videoRef.current) {
           videoRef.current.srcObject = nextStream;
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (cancelled) return;
+
+        const err = e as { name?: string };
 
         const isInsecure =
           typeof window !== 'undefined' &&
@@ -295,12 +297,12 @@ export default function Create() {
           return;
         }
 
-        if (e?.name === 'NotAllowedError' || e?.name === 'SecurityError') {
+        if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') {
           setCameraError('Allow camera permissions to continue.');
           return;
         }
 
-        if (e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError') {
+        if (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError') {
           setCameraError('No camera found.');
           return;
         }

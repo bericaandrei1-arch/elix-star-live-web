@@ -27,6 +27,12 @@ import AuthCallback from './pages/AuthCallback';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Copyright from './pages/Copyright';
+import Legal from './pages/Legal';
+import LegalAudio from './pages/LegalAudio';
+import LegalUGC from './pages/LegalUGC';
+import LegalAffiliate from './pages/LegalAffiliate';
+import LegalDMCA from './pages/LegalDMCA';
+import LegalSafety from './pages/LegalSafety';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -68,6 +74,12 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/copyright" element={<Copyright />} />
+          <Route path="/legal" element={<Legal />} />
+          <Route path="/legal/audio" element={<LegalAudio />} />
+          <Route path="/legal/ugc" element={<LegalUGC />} />
+          <Route path="/legal/affiliate" element={<LegalAffiliate />} />
+          <Route path="/legal/dmca" element={<LegalDMCA />} />
+          <Route path="/legal/safety" element={<LegalSafety />} />
 
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />
