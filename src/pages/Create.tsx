@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown,
   Image as ImageIcon,
+  Mic,
   MicOff,
   Music,
   RotateCcw,
@@ -224,6 +225,10 @@ export default function Create() {
   const [isPreviewPlaying, setIsPreviewPlaying] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isFrontCamera, setIsFrontCamera] = useState(true);
+  const [isMicEnabled, setIsMicEnabled] = useState(false);
+  const [recordingDelaySeconds, setRecordingDelaySeconds] = useState<0 | 3 | 10>(0);
+  const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -320,7 +325,53 @@ export default function Create() {
     setIsFrontCamera((v) => !v);
   };
 
-  const startRecording = () => {
+  const showToast = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 1800);
+  };
+
+  const toggleMic = async () => {
+    const current = streamRef.current;
+    if (!current) {
+      showToast('Camera not ready yet.');
+      return;
+    }
+
+    const audioTracks = current.getAudioTracks();
+    if (audioTracks.length === 0) {
+      try {
+        const nextStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: isFrontCamera ? 'user' : 'environment',
+            width: { ideal: 1080 },
+            height: { ideal: 1920 },
+          },
+          audio: true,
+        });
+
+        current.getTracks().forEach((t) => t.stop());
+        streamRef.current = nextStream;
+        if (videoRef.current) videoRef.current.srcObject = nextStream;
+        nextStream.getAudioTracks().forEach((t) => (t.enabled = true));
+        setIsMicEnabled(true);
+        showToast('Microphone enabled.');
+      } catch {
+        showToast('Microphone permission denied.');
+      }
+      return;
+    }
+
+    const nextEnabled = !audioTracks.some((t) => t.enabled);
+    audioTracks.forEach((t) => (t.enabled = nextEnabled));
+    setIsMicEnabled(nextEnabled);
+    showToast(nextEnabled ? 'Microphone enabled.' : 'Microphone muted.');
+  };
+
+  const cycleTimer = () => {
+    setRecordingDelaySeconds((v) => (v === 0 ? 3 : v === 3 ? 10 : 0));
+  };
+
+  const startRecordingNow = () => {
     const stream = streamRef.current;
     if (!stream) return;
 
@@ -365,6 +416,31 @@ export default function Create() {
     } catch {
       setCameraError('Recording not supported on this device.');
     }
+  };
+
+  const startRecording = () => {
+    if (recordingDelaySeconds === 0) {
+      startRecordingNow();
+      return;
+    }
+
+    setCountdownSeconds(recordingDelaySeconds);
+    const startedAt = Date.now();
+    const total = recordingDelaySeconds;
+
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const left = total - elapsed;
+      if (left <= 0) {
+        setCountdownSeconds(null);
+        startRecordingNow();
+        return;
+      }
+      setCountdownSeconds(left);
+      window.setTimeout(tick, 200);
+    };
+
+    window.setTimeout(tick, 200);
   };
 
   const stopRecording = () => {
@@ -529,14 +605,30 @@ export default function Create() {
 
         <div className="absolute right-4 top-[88px] z-[20] flex flex-col items-center gap-5">
           <ToolbarButton icon={RotateCcw} onClick={flipCamera} />
-          <ToolbarButton icon={MicOff} onClick={() => {}} />
+          <ToolbarButton icon={isMicEnabled ? Mic : MicOff} onClick={toggleMic} active={isMicEnabled} />
           <div className="w-6 h-px bg-[#E6B36A]/30" />
-          <ToolbarButton icon={Timer} onClick={() => {}} />
-          <ToolbarButton icon={Wand2} onClick={() => {}} />
-          <ToolbarButton icon={UsersRound} onClick={() => {}} badge="check" />
-          <ToolbarButton icon={ChevronDown} onClick={() => {}} />
+          <ToolbarButton icon={Timer} onClick={cycleTimer} active={recordingDelaySeconds !== 0} />
+          <ToolbarButton icon={Wand2} onClick={() => showToast('Effects coming soon.')} />
+          <ToolbarButton icon={UsersRound} onClick={() => navigate('/friends')} badge="check" />
+          <ToolbarButton icon={ChevronDown} onClick={() => navigate('/')} />
           <ToolbarButton icon={X} onClick={() => navigate(-1)} />
         </div>
+
+        {countdownSeconds !== null && (
+          <div className="absolute inset-0 z-[80] flex items-center justify-center bg-black/40">
+            <div className="w-24 h-24 rounded-full bg-black/70 border border-[#E6B36A]/35 flex items-center justify-center">
+              <div className="text-4xl font-black text-[#E6B36A]">{countdownSeconds}</div>
+            </div>
+          </div>
+        )}
+
+        {toast && (
+          <div className="absolute left-0 right-0 top-20 z-[90] flex justify-center px-4">
+            <div className="px-4 py-2 rounded-full bg-black/70 border border-white/10 text-sm text-white/80">
+              {toast}
+            </div>
+          </div>
+        )}
 
         <div className="absolute left-4 bottom-[96px] z-[20]">
           <button

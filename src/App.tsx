@@ -18,6 +18,7 @@ import MusicFeed from './pages/MusicFeed';
 import FollowingFeed from './pages/FollowingFeed';
 import SearchPage from './pages/SearchPage';
 import Inbox from './pages/Inbox';
+import ChatThread from './pages/ChatThread';
 import FriendsFeed from './pages/FriendsFeed';
 import EditProfile from './pages/EditProfile';
 import Settings from './pages/Settings';
@@ -69,6 +70,7 @@ function App() {
           <Route element={<RequireAuth />}>
             <Route path="/upload" element={<Upload />} />
             <Route path="/inbox" element={<Inbox />} />
+            <Route path="/inbox/:threadId" element={<ChatThread />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/settings" element={<Settings />} />
           </Route>

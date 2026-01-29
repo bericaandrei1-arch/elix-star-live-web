@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Heart, UserPlus, Bell } from 'lucide-react';
 
 export default function Inbox() {
+  const navigate = useNavigate();
   const messages = [
     { id: 1, user: 'John Doe', lastMessage: 'Hey, nice video!', time: '10m', unread: true },
     { id: 2, user: 'Jane Smith', lastMessage: 'Let\'s collab', time: '2h', unread: false },
@@ -15,7 +17,7 @@ export default function Inbox() {
       <div className="w-full max-w-[500px]">
         <header className="flex justify-center items-center mb-6 relative">
             <h1 className="text-lg font-bold">Inbox</h1>
-            <button className="absolute right-0">
+            <button className="absolute right-0" onClick={() => navigate('/inbox/new')} aria-label="New message">
                 <MessageCircle size={24} />
             </button>
         </header>
@@ -24,30 +26,30 @@ export default function Inbox() {
         <section className="mb-6">
             <h2 className="text-gray-400 text-sm font-semibold mb-4">Activities</h2>
             <div className="flex space-x-6 overflow-x-auto pb-2 scrollbar-hide">
-                <div className="flex flex-col items-center min-w-[60px]">
+                <button type="button" className="flex flex-col items-center min-w-[60px] active:opacity-70" onClick={() => navigate('/inbox/followers')}>
                     <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center mb-2">
                         <UserPlus size={24} fill="currentColor" />
                     </div>
                     <span className="text-xs text-center text-gray-300">New Followers</span>
-                </div>
-                 <div className="flex flex-col items-center min-w-[60px]">
+                </button>
+                 <button type="button" className="flex flex-col items-center min-w-[60px] active:opacity-70" onClick={() => navigate('/inbox/likes')}>
                     <div className="w-14 h-14 bg-pink-500 rounded-full flex items-center justify-center mb-2">
                         <Heart size={24} fill="currentColor" />
                     </div>
                     <span className="text-xs text-center text-gray-300">Likes</span>
-                </div>
-                 <div className="flex flex-col items-center min-w-[60px]">
+                </button>
+                 <button type="button" className="flex flex-col items-center min-w-[60px] active:opacity-70" onClick={() => navigate('/inbox/comments')}>
                     <div className="w-14 h-14 bg-blue-400 rounded-full flex items-center justify-center mb-2">
                         <MessageCircle size={24} fill="currentColor" />
                     </div>
                     <span className="text-xs text-center text-gray-300">Comments</span>
-                </div>
-                 <div className="flex flex-col items-center min-w-[60px]">
+                </button>
+                 <button type="button" className="flex flex-col items-center min-w-[60px] active:opacity-70" onClick={() => navigate('/inbox/mentions')}>
                     <div className="w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center mb-2">
                         <Bell size={24} fill="currentColor" />
                     </div>
                     <span className="text-xs text-center text-gray-300">Mentions</span>
-                </div>
+                </button>
             </div>
         </section>
 
@@ -56,7 +58,12 @@ export default function Inbox() {
              <h2 className="text-gray-400 text-sm font-semibold mb-4">Messages</h2>
              <div className="space-y-4">
                 {messages.map(msg => (
-                    <div key={msg.id} className="flex items-center justify-between active:opacity-70 cursor-pointer">
+                    <button
+                      type="button"
+                      key={msg.id}
+                      className="w-full flex items-center justify-between active:opacity-70 cursor-pointer text-left"
+                      onClick={() => navigate(`/inbox/${msg.id}`)}
+                    >
                         <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 bg-gray-700 rounded-full overflow-hidden">
                                 <img src={`https://ui-avatars.com/api/?name=${msg.user}&background=random`} alt={msg.user} />
@@ -69,7 +76,7 @@ export default function Inbox() {
                             </div>
                         </div>
                         <span className="text-xs text-gray-500">{msg.time}</span>
-                    </div>
+                    </button>
                 ))}
              </div>
         </section>
